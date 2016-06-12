@@ -1,8 +1,9 @@
 import nose
 
-import swarm
+from humanhive import swarm
 
 def test_swarm():
     # Initialise a Swarm object
-    
-    # Run some tests to check it gives the right results. 
+
+    # Run some tests to check it gives the right results.
+    pass

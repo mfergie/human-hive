@@ -21,7 +21,7 @@ def load_wave_file(filename, ensure_sample_rate=None):
 
     Returns
     -------
-    samples: array_like, shape: (n_channels, n_samples)
+    samples: array_like, shape: (n_samples, n_channels)
         Returns the audio samples
     """
 
@@ -31,13 +31,17 @@ def load_wave_file(filename, ensure_sample_rate=None):
                 wavefile.getframerate() != ensure_sample_rate):
             raise ValueError("Sample rate of audio {} doesn't match {}".format(
                 wavefile.getframerate(), ensure_sample_rate))
+        if wavefile.getsampwidth() != 2:
+            raise ValueError("Only supports WAV files with sample width of 2")
 
         n_channels = wavefile.getnchannels()
         n_samples = wavefile.getnframes()
 
-        samples = np.frombuffer()
-        samples = np.ndarray(n_channels, n_samples, dtype=np.float32)
-        samples
+        samples = np.frombuffer(
+            wavefile.readframes(n_samples), dtype=np.int16)
+        samples = samples.reshape(-1, n_channels)
+
+        return samples
 
 class SampleStream():
     """
