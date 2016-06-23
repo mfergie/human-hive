@@ -43,6 +43,15 @@ def load_wave_file(filename, ensure_sample_rate=None):
 
         return samples
 
+def copy_n_channels(audio, n_channels):
+    """
+    Copy a mono audio feed as shape (n_samples,) into an n_channels audio feed
+    of shape (N, n_channels)
+    """
+    assert audio.ndim == 1, "Error, audio must be single channel"
+    return np.hstack([audio[:,np.newaxis] for _ in range(n_channels)])
+
+
 class SampleStream():
     """
     Provides access to an audio buffer chunk by chunk.
