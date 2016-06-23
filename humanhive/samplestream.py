@@ -36,12 +36,21 @@ def load_wave_file(filename, ensure_sample_rate=None):
 
         n_channels = wavefile.getnchannels()
         n_samples = wavefile.getnframes()
-
+        print("n_channels: {}, n_samples: {}".format(n_channels, n_samples))
         samples = np.frombuffer(
             wavefile.readframes(n_samples), dtype=np.int16)
         samples = samples.reshape(-1, n_channels)
 
         return samples
+
+def copy_n_channels(audio, n_channels):
+    """
+    Copy a mono audio feed as shape (n_samples,) into an n_channels audio feed
+    of shape (N, n_channels)
+    """
+    assert audio.ndim == 1, "Error, audio must be single channel"
+    return np.hstack([audio[:,np.newaxis] for _ in range(n_channels)])
+
 
 class SampleStream():
     """
@@ -56,7 +65,7 @@ class SampleStream():
         self.audio_buffer = audio_buffer
         self.next_sample = 0
 
-    def retrieve_samples(n_samples):
+    def retrieve_samples(self, n_samples):
         end_sample = self.next_sample + n_samples
         samples = np.take(
             self.audio_buffer,
