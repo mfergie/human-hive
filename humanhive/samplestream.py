@@ -36,7 +36,7 @@ def load_wave_file(filename, ensure_sample_rate=None):
 
         n_channels = wavefile.getnchannels()
         n_samples = wavefile.getnframes()
-
+        print("n_channels: {}, n_samples: {}".format(n_channels, n_samples))
         samples = np.frombuffer(
             wavefile.readframes(n_samples), dtype=np.int16)
         samples = samples.reshape(-1, n_channels)
@@ -56,7 +56,7 @@ class SampleStream():
         self.audio_buffer = audio_buffer
         self.next_sample = 0
 
-    def retrieve_samples(n_samples):
+    def retrieve_samples(self, n_samples):
         end_sample = self.next_sample + n_samples
         samples = np.take(
             self.audio_buffer,
