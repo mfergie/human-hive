@@ -26,7 +26,7 @@ def build_parser():
         help="Directory containing audio files of swarm samples")
 
     parser.add_argument(
-        "--recording-samples-dir",
+        "--recorded-samples-dir",
         required=False,
         help=(
             "Directory for saving recordings. "
@@ -36,7 +36,17 @@ def build_parser():
 
 
 if __name__ == "__main__":
-    assert False, "Unfinished"
+    args = build_parser().parse_args()
 
-    humanhive = HumanHive(**args)
-    humanhive.run()
+    humanhive = HumanHive(
+        n_channels=args.n_channels,
+        swarm_samples_dir=args.swarm_samples_dir,
+        recorded_samples_dir=args.recorded_samples_dir)
+
+    humanhive.start_stream()
+
+    while humanhive.is_active():
+        print("is active")
+        time.sleep(0.1)
+
+    humanhive.close_stream()

@@ -1,4 +1,26 @@
 """Module for managing swarm positions"""
+import math
+import numpy as np
+
+class CosSinSwarm:
+    """
+    A toy module for doing 2 channel volumes using cos/sin functions.
+    """
+    def __init__(self, sample_rate):
+
+        self.sample_rate = sample_rate
+        self.start_theta = 0
+        self.period = 20
+
+    def sample_swarm_volumes(self, frame_count):
+        end_theta = (self.start_theta +
+            ((frame_count / (self.sample_rate*self.period)) * 2*math.pi))
+        theta = np.linspace(self.start_theta, end_theta, frame_count)
+        self.start_theta = end_theta
+        left_vol = np.cos(theta)
+        right_vol = np.sin(theta)
+
+        return np.hstack((left_vol[:,np.newaxis], right_vol[:,np.newaxis]))
 
 
 class Swarm:
