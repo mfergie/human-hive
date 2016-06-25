@@ -4,10 +4,11 @@ samplestream module
 Functionality for loading audio samples and looping them in a stream-friendly
 manner.
 """
+import os
 import wave
 import numpy as np
 
-def load_wave_file(filename, ensure_sample_rate=None):
+def load_wave_file(filename, ensure_sample_rate=None, mono=False):
     """
     Load a WAV file.
 
@@ -41,11 +42,20 @@ def load_wave_file(filename, ensure_sample_rate=None):
             wavefile.readframes(n_samples), dtype=np.int16)
         samples = samples.reshape(-1, n_channels)
 
-        return samples
+    if mono:
+        # Only take first channel, and flatten
+        samples = samples[:,0].flatten()
+
+    return samples
 
 
-def load_samples_from_dir():
-    assert False, "Not implemented"
+def load_samples_from_dir(sample_dir, extensions=(".wav",)):
+    files = os.listdir(sample_dir)
+    wav_files = [fn for fn in files if os.path.splitext(fn)[1] in extensions]
+    samples_list = [
+        load_wave_file(os.path.join(sample_dir, fn), mono=True) for fn in wav_files]
+
+    return samples_list
 
 
 def copy_n_channels(audio, n_channels):
