@@ -43,6 +43,11 @@ def load_wave_file(filename, ensure_sample_rate=None):
 
         return samples
 
+
+def load_samples_from_dir():
+    assert False, "Not implemented"
+
+
 def copy_n_channels(audio, n_channels):
     """
     Copy a mono audio feed as shape (n_samples,) into an n_channels audio feed
