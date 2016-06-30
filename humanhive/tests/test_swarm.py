@@ -1,7 +1,6 @@
 import nose
 import sys
-sys.path.insert(0, '../')
-import swarm
+from humanhive import swarm
 import numpy as np
 
 def test_swarm():
@@ -32,4 +31,5 @@ def test_swarm():
 #           % int(6*(test_swarm.swarm_position-np.pi/12)/np.pi)
 
 #    print test_positions
-test_swarm()
+
+

@@ -2,6 +2,7 @@ import pyaudio
 import wave
 import time
 import sys
+import numpy as np
 
 if len(sys.argv) < 2:
     print("Plays a wave file.\n\nUsage: %s filename.wav" % sys.argv[0])
@@ -13,7 +14,8 @@ p = pyaudio.PyAudio()
 
 def callback(in_data, frame_count, time_info, status):
     data = wf.readframes(frame_count)
-    return (data, pyaudio.paContinue)
+    npdata = np.frombuffer(data, dtype=np.int16)
+    return (npdata, pyaudio.paContinue)
 
 stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
                 channels=wf.getnchannels(),

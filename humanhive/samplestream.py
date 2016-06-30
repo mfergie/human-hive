@@ -4,10 +4,11 @@ samplestream module
 Functionality for loading audio samples and looping them in a stream-friendly
 manner.
 """
+import os
 import wave
 import numpy as np
 
-def load_wave_file(filename, ensure_sample_rate=None):
+def load_wave_file(filename, ensure_sample_rate=None, mono=False):
     """
     Load a WAV file.
 
@@ -21,7 +22,7 @@ def load_wave_file(filename, ensure_sample_rate=None):
 
     Returns
     -------
-    samples: array_like, shape: (n_channels, n_samples)
+    samples: array_like, shape: (n_samples, n_channels)
         Returns the audio samples
     """
 
@@ -31,13 +32,40 @@ def load_wave_file(filename, ensure_sample_rate=None):
                 wavefile.getframerate() != ensure_sample_rate):
             raise ValueError("Sample rate of audio {} doesn't match {}".format(
                 wavefile.getframerate(), ensure_sample_rate))
+        if wavefile.getsampwidth() != 2:
+            raise ValueError("Only supports WAV files with sample width of 2")
 
         n_channels = wavefile.getnchannels()
         n_samples = wavefile.getnframes()
+        print("n_channels: {}, n_samples: {}".format(n_channels, n_samples))
+        samples = np.frombuffer(
+            wavefile.readframes(n_samples), dtype=np.int16)
+        samples = samples.reshape(-1, n_channels)
 
-        samples = np.frombuffer()
-        samples = np.ndarray(n_channels, n_samples, dtype=np.float32)
-        samples
+    if mono:
+        # Only take first channel, and flatten
+        samples = samples[:,0].flatten()
+
+    return samples
+
+
+def load_samples_from_dir(sample_dir, extensions=(".wav",)):
+    files = os.listdir(sample_dir)
+    wav_files = [fn for fn in files if os.path.splitext(fn)[1] in extensions]
+    samples_list = [
+        load_wave_file(os.path.join(sample_dir, fn), mono=True) for fn in wav_files]
+
+    return samples_list
+
+
+def copy_n_channels(audio, n_channels):
+    """
+    Copy a mono audio feed as shape (n_samples,) into an n_channels audio feed
+    of shape (N, n_channels)
+    """
+    assert audio.ndim == 1, "Error, audio must be single channel"
+    return np.hstack([audio[:,np.newaxis] for _ in range(n_channels)])
+
 
 class SampleStream():
     """
@@ -52,7 +80,7 @@ class SampleStream():
         self.audio_buffer = audio_buffer
         self.next_sample = 0
 
-    def retrieve_samples(n_samples):
+    def retrieve_samples(self, n_samples):
         end_sample = self.next_sample + n_samples
         samples = np.take(
             self.audio_buffer,
