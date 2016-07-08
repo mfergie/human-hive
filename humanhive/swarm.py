@@ -1,6 +1,7 @@
 """Module for managing swarm positions"""
 import math
 import numpy as np
+from sklearn.metrics.pairwise import rbf_kernel
 
 class CosSinSwarm:
     """
@@ -149,3 +150,23 @@ class Swarm:
             s_counter = new_s_counter
 
         return positions
+
+
+def hive_volumes(hives, swarm_positions, sigma=1):
+    """
+    Computes the volume at each hive based on the swarm position.
+
+    Parameters
+    ----------
+    hives: array_like, (H, 2)
+        An array containing the 2D positions of each hive.
+        H denotes the number of hives.
+    swarm_positions: (N, 2)
+        The position of the swarm at each sample.
+
+    Returns
+    -------
+    hive_volumes: array_like, (H, N)
+        The volume for each hive at each sample.
+    """
+    return rbf_kernel(hives, swarm_positions, gamma=1)
