@@ -18,11 +18,11 @@ def test_swarm():
         theta = np.pi/12 + i*np.pi/6
         hives.append([r*np.cos(theta),r*np.sin(theta)])
 
-    test_swarm = swarm.Swarm(r,hives,swarm_speed)
-  
-    # Run some tests to check it gives the right results. 
+    test_swarm = swarm.Swarm(r, hives, swarm_speed, 441000)
 
-    test_positions = test_swarm.sample_swarm_positions_rand(100,44100)
+    # Run some tests to check it gives the right results.
+
+    test_positions = test_swarm.sample_swarm_positions_rand(100)
 
 #    print test_swarm.swarm_position
 
@@ -31,5 +31,3 @@ def test_swarm():
 #           % int(6*(test_swarm.swarm_position-np.pi/12)/np.pi)
 
 #    print test_positions
-
-

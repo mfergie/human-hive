@@ -44,7 +44,7 @@ class Swarm:
         self.r = r
         self.hives = hives
         self.swarm_speed = swarm_speed
-        print swarm_speed
+        print(swarm_speed)
         self.swarm_speed_rad = swarm_speed/r
         self.sample_rate = sample_rate
 
