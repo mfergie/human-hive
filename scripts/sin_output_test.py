@@ -11,20 +11,20 @@ n_channels=6
 
 def callback(in_data, frame_count, time_info, status, last_theta=[0]):
     start_theta = last_theta[0]
-    end_theta = start_theta + 440*(frame_count/41000) * 2*np.pi
+    end_theta = start_theta + 440*(frame_count/41000.0) * 2*np.pi
     last_theta[0] = end_theta
     sin_data = np.sin(np.linspace(start_theta, end_theta, frame_count))
     # print(sin_data)
     data = np.zeros((frame_count, n_channels), dtype=np.float32)
     # print(data.shape)
     data[:,5] = np.floor(sin_data * (2**15))
-    # print(data)
+    print(data)
 
     data *= 0.1
 
     npdata = np.asarray(data, dtype=np.int16)
 
-    print(npdata)
+    #print(npdata)
     return (npdata, pyaudio.paContinue)
 
 print("Device parameters: {}".format(p.get_default_output_device_info()))
