@@ -18,7 +18,7 @@ def test_swarm():
 
     # Run some tests to check it gives the right results.
 
-    test_positions = test_swarm.sample_swarm_positions_rand(100)
+    test_positions = test_swarm.sample_swarm_positions(100)
 
     assert_equal(test_positions.shape, (100, 2))
 

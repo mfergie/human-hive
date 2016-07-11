@@ -25,13 +25,13 @@ class CosSinSwarm:
 
 class Swarm:
 
-    def __init__(self, r, hives, swarm_speed, sample_rate):
+    def __init__(self, hive_radius, hives, swarm_speed, sample_rate):
         """
         Initialise a swarm.
 
         Parameters
         ----------
-        r: float
+        hive_radius: float
             If the hives are in a circular arrangement, this
             is the radius of the circle in m.
         hives: array_like, (H, 2)
@@ -42,11 +42,11 @@ class Swarm:
         sample_rate: int
             The sample rate.
         """
-        self.r = r
+        self.hive_radius = hive_radius
         self.hives = hives
         self.swarm_speed = swarm_speed
         print(swarm_speed)
-        self.swarm_speed_rad = swarm_speed/r
+        self.swarm_speed_rad = swarm_speed/hive_radius
         self.sample_rate = sample_rate
 
         # Now initialise position
@@ -57,7 +57,7 @@ class Swarm:
 
         # assert False, "Needs completing"
 
-    def sample_swarm_positions_rand(self, n_samples):
+    def sample_swarm_positions(self, n_samples):
         """
         Samples the position of a swarm as it moves around the
         circle at random for a given duration and sample rate.
@@ -109,8 +109,9 @@ class Swarm:
             sample_num = t_stay * self.sample_rate
             new_s_counter = s_counter + sample_num
 
-            current_position = np.array([[self.r*np.cos(self.swarm_position), \
-                self.r*np.sin(self.swarm_position)]])
+            current_position = np.array(
+                [[self.hive_radius * np.cos(self.swarm_position),
+                  self.hive_radius * np.sin(self.swarm_position)]])
 
             if s_counter + sample_num < total_samples:
                 positions[s_counter:new_s_counter, :] = \
