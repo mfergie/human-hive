@@ -59,6 +59,39 @@ def test_swarm_linear():
 
     print(positions)
 
+def test_swarm_linear_6_channel():
+
+    hives = [
+        [0, 0],
+        [1, 1],
+        [2, 2],
+        [3, 3],
+        [4, 4],
+        [5, 5]
+    ]
+
+    test_swarm = swarm.SwarmLinear(hives, 1.4, 1024)
+
+    positions = test_swarm.sample_swarm_positions(1024)
+
+    assert_array_almost_equal(positions[0], [0, 0], decimal=3)
+    assert_array_almost_equal(positions[-1], [1, 1], decimal=1)
+
+    for _ in range(3):
+        # 3 second linger
+        positions = test_swarm.sample_swarm_positions(1024)
+
+        assert_array_almost_equal(positions[0], [1, 1], decimal=1)
+        assert_array_almost_equal(positions[-1], [1, 1], decimal=1)
+
+    positions = test_swarm.sample_swarm_positions(1024)
+
+    assert_array_almost_equal(positions[0], [1, 1], decimal=3)
+    assert_array_almost_equal(positions[-1], [2, 2], decimal=1)
+
+    print(positions)
+
+
 def test_hive_volumes():
 
     positions = np.random.rand(100, 2)
