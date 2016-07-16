@@ -23,6 +23,147 @@ class CosSinSwarm:
 
         return np.hstack((left_vol[:,np.newaxis], right_vol[:,np.newaxis]))
 
+
+class SwarmLinear:
+    def __init__(self, hives, swarm_speed, sample_rate):
+        """
+        Initialise a swarm.
+
+        Parameters
+        ----------
+        hives: array_like, (H, 2)
+            An array containing the 2D positions of each hive.
+            H denotes the number of hives.
+        swarm_speed: float
+            The speed that the swarm will travel. This is given in units/second
+            where the units are the same as those used for the hive positions.
+        sample_rate: int
+            The sample rate.
+        """
+        self.hives = np.asarray(hives)
+        self.n_hives = len(hives)
+        self.swarm_speed = swarm_speed
+        # Compute how far the swarm should travel per frame
+        self.swarm_speed_upf = self.swarm_speed / sample_rate
+        self.sample_rate = sample_rate
+
+        # Initialise movement. Set initial position to hive 0, and set them off
+        # towards hive 1
+        self.swarm_position = self.hives[0]
+        self.destination_hive = 1
+
+        # n_linger_frames stores the number of frames that the swarm has remaining
+        # to linger at the current position.
+        self.n_linger_frames = 0
+
+
+    def sample_swarm_positions(self, n_samples):
+        """
+        Samples the position of a swarm as it moves around the
+        circle at random for a given duration and sample rate.
+        Updates the internal state of the object with the new
+        swarm position such that subsequent calls will progress
+        the swarm on its path.
+
+        Parameters
+        ----------
+        duration: float
+            The duration in seconds for which to generate the samples.
+        n_samples: int
+            The number of samples to generate.
+
+        Returns
+        -------
+        positions: array_like, (N, 2)
+            Returns N = duration * sample_rate samples for the position
+            of the swarm. Position is given by the angle of the swarm
+        """
+
+        # Compute the frame index that movement will start at.
+        if self.n_linger_frames > n_samples:
+            # Still lingering, set movement_start_frame to n_samples
+            movement_start_frame = n_samples
+        else:
+            movement_start_frame = self.n_linger_frames
+
+
+        # Compute the frame index that movement will end at
+        swarm_destination_position = self.hives[self.destination_hive]
+        destination_vector = (
+            swarm_destination_position - self.swarm_position)
+
+        # movement_per_frame_vector gives the offset for each frame of
+        # movement.
+        movement_per_frame_vector = (
+            (destination_vector / np.linalg.norm(destination_vector)) *
+            self.swarm_speed_upf)
+
+        # Compute the frame that we would reach destination by projecting
+        # the destination point onto the movement vector
+        destination_frame = int(np.ceil(
+            (swarm_destination_position[0] - self.swarm_position[0]) /
+            movement_per_frame_vector[0]))
+
+
+
+        n_remaining_frames = n_samples - movement_start_frame
+
+        if destination_frame > n_remaining_frames:
+            movement_end_frame = n_samples
+        else:
+            movement_end_frame = movement_start_frame + destination_frame
+
+        print("---------------------------------------------")
+        print("swarm speed upf: {}".format(self.swarm_speed_upf))
+        print("swarm_position: {}, swarm_destination_position: {}, n_linger_frames: {}".format(
+            self.swarm_position, swarm_destination_position, self.n_linger_frames
+        ))
+        print("movement_start_frame: {}, movement_end_frame: {}".format(
+            movement_start_frame, movement_end_frame))
+        print("destination_frame: {}".format(destination_frame))
+        print("\n")
+        # Now set the positions.
+        positions = np.zeros((n_samples, 2), dtype=np.float32)
+
+        # Movement start
+        positions[:movement_start_frame] = self.swarm_position[np.newaxis,:]
+
+        # Movement middle
+        frame_indices = np.arange(1, (movement_end_frame - movement_start_frame) + 1)
+        relative_positions = (
+            movement_per_frame_vector[np.newaxis,:] * frame_indices[:,np.newaxis])
+        positions[movement_start_frame:movement_end_frame] = (
+            relative_positions + self.swarm_position)
+
+        # Movement end, copy last movement position to finish
+        positions[movement_end_frame:] = positions[movement_end_frame-1]
+
+        ###
+        # Now update internal state
+        ###
+        self.swarm_position = positions[-1]
+        if movement_end_frame < n_samples:
+            # We reached destination, sample new destination hive
+            self.destination_hive = (self.destination_hive + 1) % self.n_hives
+
+            # Sample a linger time
+            self.n_linger_frames = (
+                3 * self.sample_rate - (n_samples - movement_end_frame))
+        if movement_start_frame > 0:
+            self.n_linger_frames -= movement_start_frame
+
+        print("New:\nswarm_position: {}, destination_hive: {}, n_linger_frames: {}\n\n\n\n".format(
+            self.swarm_position, self.destination_hive, self.n_linger_frames))
+
+        return positions
+
+    def sample_swarm_volumes(self, n_samples):
+        swarm_positions = self.sample_swarm_positions(n_samples)
+        # print(swarm_positions)
+        # print("Position: {}".format(swarm_positions[0]), end=", ")
+        return hive_volumes(self.hives, swarm_positions)
+
+
 class Swarm:
 
     def __init__(self, hive_radius, hives, swarm_speed, sample_rate):
@@ -44,6 +185,7 @@ class Swarm:
         """
         self.hive_radius = hive_radius
         self.hives = hives
+        self.n_hives = len(hives)
         self.swarm_speed = swarm_speed
         print(swarm_speed)
         self.swarm_speed_rad = swarm_speed/hive_radius
@@ -54,8 +196,6 @@ class Swarm:
         # Perhaps the simplest way is to give the swarm position as angle
         # from some reference point
         self.swarm_position = 0
-
-        # assert False, "Needs completing"
 
     def sample_swarm_positions(self, n_samples):
         """
@@ -90,15 +230,12 @@ class Swarm:
         linger_options = range(min_linger_time, max_linger_time)
 
         # Choose a random hive to begin at and update position
-        hive_no = np.random.randint(7)
+        hive_no = np.random.randint(self.n_hives)
         self.swarm_position = np.pi/12 + np.pi*hive_no/6
 
         total_samples = n_samples
         s_counter = 0       # Sample counter
         positions = np.empty((total_samples, 2))
-
-        print("Shape of positions is ", np.shape(positions))
-        print("Total number of samples is ", total_samples)
 
         increment = self.swarm_speed_rad/self.sample_rate
         tolerance = increment
@@ -134,8 +271,8 @@ class Swarm:
                 # Increment swarm position
                 self.swarm_position = self.swarm_position + s_dir*increment
                 current_position = (
-                    np.array([[self.r*np.cos(self.swarm_position),
-                    self.r*np.sin(self.swarm_position)]]))
+                    np.array([[self.hive_radius * np.cos(self.swarm_position),
+                    self.hive_radius * np.sin(self.swarm_position)]]))
 
                 # Update positions array
                 positions[new_s_counter, :] = current_position
@@ -151,6 +288,39 @@ class Swarm:
             s_counter = new_s_counter
 
         return positions
+
+    def sample_swarm_volumes(self, n_samples):
+        swarm_positions = self.sample_swarm_positions(n_samples)
+        print(swarm_positions)
+        print("Position: {}".format(swarm_positions[0]), end=", ")
+        return hive_volumes(self.hives, swarm_positions)
+
+class SwarmBuffer:
+    """
+    Wraps Swarm and generates samples for a large sequence. These are then
+    returned chunk by chunk through sample_swarm_volumes.
+    """
+
+    def __init__(self, *args, **kwargs):
+        self.swarm = Swarm(*args, **kwargs)
+
+        # Generate volumes for 10 mins
+        self.volumes = self.swarm.sample_swarm_volumes(41000 * 60 * 1)
+
+
+        self.next_sample = 0
+
+    def sample_swarm_volumes(self, n_samples):
+        end_sample = self.next_sample + n_samples
+        samples = np.take(
+            self.volumes,
+            range(self.next_sample, end_sample),
+            mode='wrap',
+            axis = 0)
+        self.next_sample = end_sample % self.volumes.shape[0]
+
+        return samples
+
 
 
 def hive_volumes(hives, swarm_positions, sigma=1):
@@ -170,4 +340,4 @@ def hive_volumes(hives, swarm_positions, sigma=1):
     hive_volumes: array_like, (H, N)
         The volume for each hive at each sample.
     """
-    return rbf_kernel(hives, swarm_positions, gamma=1)
+    return rbf_kernel(swarm_positions, hives, gamma=1)

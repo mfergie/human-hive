@@ -6,6 +6,8 @@ def compute_audio_volume_per_frame(in_data):
     rmse = librosa.feature.rmse(in_data)
     return rmse
 
+def compute_audio_volume(in_data):
+    return np.mean(compute_audio_volume_per_frame(in_data))
 
 def compute_audio_threshold_crossings(frame_volumes, threshold):
     """
