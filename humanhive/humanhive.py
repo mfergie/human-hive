@@ -3,7 +3,7 @@ Contains the main human hive class for operation.
 """
 import numpy as np
 import pyaudio
-from . import samplestream, swarm
+from . import samplestream, swarm, hive, utils
 
 class HumanHive:
     """
@@ -62,14 +62,23 @@ class Playback:
         self.sample = samplestream.SampleStream(self.sample_bank.swarm_samples[0])
 
         # Create swarm volume controller
-        self.swarm = swarm.CosSinSwarm(sample_rate)
+        self.hive_radius = 3
+        self.n_hives = n_channels
+        self.hives = hive.generate_hive_circle(
+            n_hives=self.n_hives, hive_radius=self.hive_radius)
+        self.swarm = swarm.SwarmLinear(
+            hives=self.hives,
+            swarm_speed=0.1,
+            sample_rate=self.sample_rate)
 
     def retrieve_samples(self, frame_count):
 
         samples = np.asarray(self.sample.retrieve_samples(frame_count), np.float32)
 
         samples_stereo = samplestream.copy_n_channels(samples, self.n_channels)
-        samples_stereo *= self.swarm.sample_swarm_volumes(frame_count)
+        swarm_volumes = self.swarm.sample_swarm_volumes(frame_count)
+        print("Swarm volumes: {}".format(swarm_volumes[0]))
+        samples_stereo *= swarm_volumes
 
         return np.asarray(samples_stereo, np.int16)
 
@@ -85,15 +94,43 @@ class Recording:
     def __init__(self, sample_bank):
         self.sample_bank = sample_bank
 
+        # Stores a list of frames which make up the current sample. Initialised
+        # to None to indicate that there is no current sample being recorded.
+        self.current_sample = None
+
+        # Stores the volume of the last sub-frame picked up by process_audio()
+        # Used to threshold volume when segmenting audio. Initialise to None
+        # to allow setting at initial levels. n_ambient_chunks stores the
+        # number of ambient chunks used to compute the average
+        self.ambient_volume = None
+        self.n_ambient_chunks = 0
 
     def process_audio(self, in_data, frame_count):
         """
         Processes incoming audio data. Segments when a voice is detected and
         records sample. This is then saved to the sample_bank.
         """
-        pass
+        in_data = np.frombuffer(in_data, dtype=np.int16)
+
+        if self.current_sample is None:
+            self.update_ambient_volume(in_data)
 
 
+
+
+    def update_ambient_volume(self, in_data):
+        """
+        Updates the ambient volume
+        """
+        if self.ambient_volume is None:
+            self.ambient_volume = utils.compute_audio_volume(in_data)
+        else:
+            existing_ambient_volume = (
+                self.ambient_volume *
+                (self.n_ambient_chunks / (self.n_ambient_chunks + 1)))
+            current_contribution = (
+                utils.compute_audio_volume(in_data) / (self.n_ambient_chunks + 1))
+            self.ambient_volume = existing_ambient_volume + current_contribution
 
 class AudioInterface:
     """
@@ -127,6 +164,7 @@ class AudioInterface:
 
 
     def audio_callback(self, in_data, frame_count, time_info, status):
+
         # Send recording data
         self.recording.process_audio(in_data, frame_count)
 

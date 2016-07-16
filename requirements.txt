@@ -3,3 +3,5 @@
 pyaudio
 nose
 numpy
+scipy
+scikit-learn
