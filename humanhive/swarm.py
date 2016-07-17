@@ -113,15 +113,6 @@ class SwarmLinear:
         else:
             movement_end_frame = movement_start_frame + destination_frame
 
-        print("---------------------------------------------")
-        print("swarm speed upf: {}".format(self.swarm_speed_upf))
-        print("swarm_position: {}, swarm_destination_position: {}, n_linger_frames: {}".format(
-            self.swarm_position, swarm_destination_position, self.n_linger_frames
-        ))
-        print("movement_start_frame: {}, movement_end_frame: {}".format(
-            movement_start_frame, movement_end_frame))
-        print("destination_frame: {}".format(destination_frame))
-        print("\n")
         # Now set the positions.
         positions = np.zeros((n_samples, 2), dtype=np.float32)
 
@@ -152,7 +143,7 @@ class SwarmLinear:
         if movement_start_frame > 0:
             self.n_linger_frames -= movement_start_frame
 
-        print("New:\nswarm_position: {}, destination_hive: {}, n_linger_frames: {}\n\n\n\n".format(
+        print("swarm_position: {}, destination_hive: {}, n_linger_frames: {}".format(
             self.swarm_position, self.destination_hive, self.n_linger_frames))
 
         return positions
