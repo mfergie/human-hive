@@ -140,11 +140,13 @@ class SwarmLinear:
             # Sample a linger time
             self.n_linger_frames = (
                 3 * self.sample_rate - (n_samples - movement_end_frame))
+
+            print("swarm_position: {}, destination_hive: {}, n_linger_frames: {}".format(
+                self.swarm_position, self.destination_hive, self.n_linger_frames))
+
         if movement_start_frame > 0:
             self.n_linger_frames -= movement_start_frame
 
-        print("swarm_position: {}, destination_hive: {}, n_linger_frames: {}".format(
-            self.swarm_position, self.destination_hive, self.n_linger_frames))
 
         return positions
 

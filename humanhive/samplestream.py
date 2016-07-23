@@ -37,7 +37,7 @@ def load_wave_file(filename, ensure_sample_rate=None, mono=False):
 
     n_channels = wavefile.getnchannels()
     n_samples = wavefile.getnframes()
-    print("n_channels: {}, n_samples: {}".format(n_channels, n_samples))
+    # print("n_channels: {}, n_samples: {}".format(n_channels, n_samples))
     samples = np.frombuffer(
         wavefile.readframes(n_samples), dtype=np.int16)
     samples = samples.reshape(-1, n_channels)

@@ -54,7 +54,7 @@ if __name__ == "__main__":
     humanhive.start_stream()
 
     while humanhive.is_active():
-        print("is active")
+        # print("is active")
         time.sleep(0.1)
 
     humanhive.close_stream()

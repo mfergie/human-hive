@@ -80,7 +80,7 @@ class Playback:
 
         samples_stereo = samplestream.copy_n_channels(samples, self.n_channels)
         swarm_volumes = self.swarm.sample_swarm_volumes(frame_count)
-        print("Swarm volumes: {}".format(swarm_volumes[0]))
+        # print("Swarm volumes: {}".format(swarm_volumes[0]))
         samples_stereo *= swarm_volumes
 
 
