@@ -44,6 +44,7 @@ def build_parser():
 if __name__ == "__main__":
     args = build_parser().parse_args()
 
+    print("Initialising...")
     humanhive = HumanHive(
         n_channels=args.n_channels,
         swarm_samples_dir=args.swarm_samples_dir,
@@ -51,10 +52,12 @@ if __name__ == "__main__":
         device_id=args.device_id,
         sample_rate=utils.get_sample_rate_for_device(args.device_id))
 
+    print("Starting audio stream")
     humanhive.start_stream()
 
     while humanhive.is_active():
         # print("is active")
         time.sleep(0.1)
 
+    print("Closing audio stream")
     humanhive.close_stream()
