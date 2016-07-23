@@ -1,6 +1,13 @@
 import numpy as np
+
+### Work around for librosa importing matplotlib
+import mock
+import sys
+sys.modules.update((mod_name, mock.Mock()) for mod_name in ['matplotlib', 'matplotlib.pyplot', 'matplotlib.image'])
+
 import librosa.feature
 import librosa.core
+
 import pyaudio
 
 
