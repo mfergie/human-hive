@@ -15,7 +15,8 @@ class HumanHive:
                  recorded_samples_dir=None,
                  n_channels=2,
                  sample_rate=44100,
-                 sample_width=2):
+                 sample_width=2,
+                 device_id=0):
 
         self.n_channels = n_channels
         self.sample_rate = sample_rate
@@ -30,7 +31,8 @@ class HumanHive:
             self.recording,
             self.n_channels,
             self.sample_rate,
-            self.sample_width)
+            self.sample_width,
+            device_id)
 
 
 
@@ -146,7 +148,8 @@ class AudioInterface:
                  recording,
                  n_channels,
                  sample_rate,
-                 sample_width):
+                 sample_width,
+                 device_id):
         self.playback = playback
         self.recording = recording
         self.n_channels = n_channels
@@ -156,12 +159,14 @@ class AudioInterface:
         # Initialise pyaudio interface
         self.p = pyaudio.PyAudio()
 
-        print("Device parameters: {}".format(self.p.get_default_output_device_info()))
+        print("Device parameters for device with id: {}\n{}".format(
+            device_id, self.p.get_device_info_by_index(device_id)))
 
         self.stream = self.p.open(
             format=self.p.get_format_from_width(2),
             channels=self.n_channels,
             rate=self.sample_rate,
+            output_device_index=device_id,
             # input=True,
             output=True,
             stream_callback=self.audio_callback)
