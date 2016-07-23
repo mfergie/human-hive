@@ -113,7 +113,7 @@ class SwarmLinear:
         else:
             movement_end_frame = movement_start_frame + destination_frame
 
-        # Now set the positions.
+        # Now set the positions
         positions = np.zeros((n_samples, 2), dtype=np.float32)
 
         # Movement start
@@ -282,8 +282,8 @@ class Swarm:
 
     def sample_swarm_volumes(self, n_samples):
         swarm_positions = self.sample_swarm_positions(n_samples)
-        print(swarm_positions)
-        print("Position: {}".format(swarm_positions[0]), end=", ")
+        # print(swarm_positions)
+        # print("Position: {}".format(swarm_positions[0]), end=", ")
         return hive_volumes(self.hives, swarm_positions)
 
 class SwarmBuffer:

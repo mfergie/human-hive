@@ -26,21 +26,23 @@ def load_wave_file(filename, ensure_sample_rate=None, mono=False):
         Returns the audio samples
     """
 
-    with wave.open(filename, 'rb') as wavefile:
+    wavefile = wave.open(filename, 'rb')
 
-        if (ensure_sample_rate is not None and
-                wavefile.getframerate() != ensure_sample_rate):
-            raise ValueError("Sample rate of audio {} doesn't match {}".format(
-                wavefile.getframerate(), ensure_sample_rate))
-        if wavefile.getsampwidth() != 2:
-            raise ValueError("Only supports WAV files with sample width of 2")
+    if (ensure_sample_rate is not None and
+            wavefile.getframerate() != ensure_sample_rate):
+        raise ValueError("Sample rate of audio {} doesn't match {}".format(
+            wavefile.getframerate(), ensure_sample_rate))
+    if wavefile.getsampwidth() != 2:
+        raise ValueError("Only supports WAV files with sample width of 2")
 
-        n_channels = wavefile.getnchannels()
-        n_samples = wavefile.getnframes()
-        print("n_channels: {}, n_samples: {}".format(n_channels, n_samples))
-        samples = np.frombuffer(
-            wavefile.readframes(n_samples), dtype=np.int16)
-        samples = samples.reshape(-1, n_channels)
+    n_channels = wavefile.getnchannels()
+    n_samples = wavefile.getnframes()
+    print("n_channels: {}, n_samples: {}".format(n_channels, n_samples))
+    samples = np.frombuffer(
+        wavefile.readframes(n_samples), dtype=np.int16)
+    samples = samples.reshape(-1, n_channels)
+
+    wavefile.close()
 
     if mono:
         # Only take first channel, and flatten

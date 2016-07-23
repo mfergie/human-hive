@@ -33,6 +33,7 @@ class HumanHive:
             self.sample_width)
 
 
+
     def start_stream(self):
         self.audio_interface.start_stream()
 
@@ -80,6 +81,8 @@ class Playback:
         print("Swarm volumes: {}".format(swarm_volumes[0]))
         samples_stereo *= swarm_volumes
 
+
+        samples_stereo *= 0.5
         return np.asarray(samples_stereo, np.int16)
 
 
@@ -110,10 +113,10 @@ class Recording:
         Processes incoming audio data. Segments when a voice is detected and
         records sample. This is then saved to the sample_bank.
         """
-        in_data = np.frombuffer(in_data, dtype=np.int16)
-
-        if self.current_sample is None:
-            self.update_ambient_volume(in_data)
+        # in_data = np.frombuffer(in_data, dtype=np.int16)
+        #
+        # if self.current_sample is None:
+        #     self.update_ambient_volume(in_data)
 
 
 
@@ -153,11 +156,13 @@ class AudioInterface:
         # Initialise pyaudio interface
         self.p = pyaudio.PyAudio()
 
+        print("Device parameters: {}".format(self.p.get_default_output_device_info()))
+
         self.stream = self.p.open(
             format=self.p.get_format_from_width(2),
             channels=self.n_channels,
             rate=self.sample_rate,
-            input=True,
+            # input=True,
             output=True,
             stream_callback=self.audio_callback)
         print("Finished initialising audio")
