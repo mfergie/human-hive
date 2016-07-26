@@ -23,7 +23,7 @@ class HumanHive:
 
         self.source_bank = SourceBank()
 
-        self.recording = Recording(self.source_bank)
+        self.recording = Recording(self.source_bank, 4*sample_rate)
 
         self.playback = Playback(
             self.source_bank,
@@ -114,12 +114,14 @@ class Recording:
         records sample. This is then saved to the sample_bank.
         """
 
-        if self.current_sample is None:
-            self.update_ambient_volume(in_data)
-
-        print(self.ambient_volume)
-
-        self.update_sample_buffers(in_data, frame_count)
+        # in_data = np.frombuffer(in_data, dtype=np.int16)
+        #
+        # if self.current_sample is None:
+        #     self.update_ambient_volume(in_data)
+        #
+        # print(self.ambient_volume)
+        #
+        # self.update_sample_buffers(in_data, frame_count)
 
         # Turn volumes into threshold crossings
 
@@ -132,7 +134,7 @@ class Recording:
         # Save the recorded data somewhere
 
         # Send this off to the SourceBank for adding into the mix.
-        
+
 
 
     def update_sample_buffers(self, in_data, frame_count):
