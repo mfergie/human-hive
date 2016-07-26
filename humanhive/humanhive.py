@@ -11,21 +11,26 @@ class HumanHive:
     """
 
     def __init__(self,
-                 swarm_samples_dir,
-                 recorded_samples_dir=None,
                  n_channels=2,
                  sample_rate=44100,
                  sample_width=2,
-                 device_id=0):
+                 device_id=0,
+                 master_volume=1.0):
 
         self.n_channels = n_channels
         self.sample_rate = sample_rate
         self.sample_width = sample_width
 
-        self.sample_bank = SampleBank(swarm_samples_dir, recorded_samples_dir)
-        self.recording = Recording(self.sample_bank)
+        self.source_bank = SourceBank()
+
+        self.recording = Recording(self.source_bank)
+
         self.playback = Playback(
-            self.sample_bank, self.n_channels, self.sample_rate)
+            self.source_bank,
+            self.n_channels,
+            self.sample_rate,
+            master_volume=master_volume)
+
         self.audio_interface = AudioInterface(
             self.playback,
             self.recording,
@@ -52,42 +57,26 @@ class Playback:
     etc.
     """
     def __init__(self,
-                 sample_bank,
+                 source_bank,
                  n_channels,
-                 sample_rate):
+                 sample_rate,
+                 master_volume):
 
-        self.sample_bank = sample_bank
+        self.source_bank = source_bank
 
         self.n_channels = n_channels
         self.sample_rate = sample_rate
-
-        # For now, use a fixed sample
-        self.sample = samplestream.SampleStream(self.sample_bank.swarm_samples[0])
-
-        # Create swarm volume controller
-        self.hive_radius = 3
-        self.n_hives = n_channels
-        self.hives = hive.generate_hive_circle(
-            n_hives=self.n_hives, hive_radius=self.hive_radius)
-        self.swarm = swarm.SwarmLinear(
-            hives=self.hives,
-            swarm_speed=0.1,
-            sample_rate=self.sample_rate)
-
-    def retrieve_samples(self, frame_count):
-
-        samples = np.asarray(self.sample.retrieve_samples(frame_count), np.float32)
-
-        samples_stereo = samplestream.copy_n_channels(samples, self.n_channels)
-        swarm_volumes = self.swarm.sample_swarm_volumes(frame_count)
-        # print("Swarm volumes: {}".format(swarm_volumes[0]))
-        samples_stereo *= swarm_volumes
+        self.master_volume = master_volume
 
 
-        samples_stereo *= 0.5
-        return np.asarray(samples_stereo, np.int16)
+    def retrieve_samples(self, n_frames):
+        samples = np.zeros(
+            (n_frames, self.n_channels), dtype=np.float)
+        for source in self.source_bank.sources:
+            samples += source.get_frames(n_frames)
 
-
+        samples *= self.master_volume
+        return np.asarray(samples, np.int16)
 
 
 class Recording:
@@ -96,7 +85,7 @@ class Recording:
     and then directs these samples to a sample bank.
     """
 
-    def __init__(self, sample_bank):
+    def __init__(self, sample_bank, n_samples_buffer):
         self.sample_bank = sample_bank
 
         # Stores a list of frames which make up the current sample. Initialised
@@ -110,18 +99,53 @@ class Recording:
         self.ambient_volume = None
         self.n_ambient_chunks = 0
 
+        self.n_samples_buffer = n_samples_buffer
+
+        # Stores past samples for capturing recorded data when threshold
+        # lies between calls to process_audio
+        self.sample_buffer = []
+
+        # Stores changing volumes over time for analysis
+        self.volume_buffer = []
+
     def process_audio(self, in_data, frame_count):
         """
         Processes incoming audio data. Segments when a voice is detected and
         records sample. This is then saved to the sample_bank.
         """
-        # in_data = np.frombuffer(in_data, dtype=np.int16)
-        #
-        # if self.current_sample is None:
-        #     self.update_ambient_volume(in_data)
+
+        if self.current_sample is None:
+            self.update_ambient_volume(in_data)
+
+        print(self.ambient_volume)
+
+        self.update_sample_buffers(in_data, frame_count)
+
+        # Turn volumes into threshold crossings
+
+        # If there's a threshold crossing with no opposing return within the
+        # specified time limit, start recording.
+
+        # If the recording has passed a minimum length, and there is a down
+        # threshold which stays down for a specified time stop recording.
+
+        # Save the recorded data somewhere
+
+        # Send this off to the SourceBank for adding into the mix.
+        
 
 
+    def update_sample_buffers(self, in_data, frame_count):
 
+        # Check whether to discard oldest audio and volume samples. This assumes
+        # that the frame_count is always consistent
+        if len(sample_buffer) > (self.n_samples_buffer / frame_count):
+            self.sample_buffer.pop(0)
+            self.volume_buffer.pop(0)
+
+        self.sample_buffer.append(in_data)
+        self.volume_buffer.append(
+            utils.compute_audio_volume_per_frame(in_data))
 
     def update_ambient_volume(self, in_data):
         """
@@ -200,26 +224,14 @@ class AudioInterface:
 
 
 
-class SampleBank:
+class SourceBank:
     """
-    Manages the samples that will be played.
-      - Loads sets of samples from disk.
-      - Stores recorded samples
+    Manages the sources that will be played. These are created externally
+    and added in.
     """
 
-    def __init__(self,
-                 swarm_samples_dir=None,
-                 recorded_samples_dir=None):
+    def __init__(self):
+        self.sources = []
 
-        # Load samples
-        if swarm_samples_dir is not None:
-            self.swarm_samples = samplestream.load_samples_from_dir(
-                swarm_samples_dir)
-        else:
-            self.swarm_samples = []
-
-        if recorded_samples_dir is not None:
-            self.recorded_samples = samplestream.load_samples_from_dir(
-                recorded_samples_dir)
-        else:
-            self.recorded_samples = []
+    def add_source(self, source):
+        self.sources.append(source)

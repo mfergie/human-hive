@@ -8,7 +8,7 @@ import argparse
 
 import numpy as np
 import pyaudio
-from humanhive import samplestream, utils
+from humanhive import samplestream, utils, sources
 from humanhive import HumanHive
 
 def build_parser():
@@ -21,9 +21,9 @@ def build_parser():
         type=int)
 
     parser.add_argument(
-        "--swarm-samples-dir",
+        "--swarm-sample",
         required=True,
-        help="Directory containing audio files of swarm samples")
+        help="Audio file containing swarm sample")
 
     parser.add_argument(
         "--device-id",
@@ -44,13 +44,24 @@ def build_parser():
 if __name__ == "__main__":
     args = build_parser().parse_args()
 
+    sample_rate = utils.get_sample_rate_for_device(args.device_id)
+
     print("Initialising...")
     humanhive = HumanHive(
         n_channels=args.n_channels,
-        swarm_samples_dir=args.swarm_samples_dir,
-        recorded_samples_dir=args.recorded_samples_dir,
         device_id=args.device_id,
-        sample_rate=utils.get_sample_rate_for_device(args.device_id))
+        sample_rate=sample_rate)
+
+
+    audio_data = samplestream.load_wave_file(
+        args.swarm_sample, mono=True)
+    # Add a source
+    humanhive.source_bank.add_source(
+        sources.SwarmSource(
+            audio_data,
+            n_channels=args.n_channels,
+            sample_rate=sample_rate))
+
 
     print("Starting audio stream")
     humanhive.start_stream()
