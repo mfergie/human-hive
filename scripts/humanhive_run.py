@@ -50,7 +50,8 @@ if __name__ == "__main__":
     humanhive = HumanHive(
         n_channels=args.n_channels,
         device_id=args.device_id,
-        sample_rate=sample_rate)
+        sample_rate=sample_rate,
+        master_volume=0.2)
 
 
     audio_data = samplestream.load_wave_file(
