@@ -5,9 +5,19 @@ import sys
 import numpy as np
 
 
+import mock
+import sys
+sys.modules.update((mod_name, mock.Mock()) for mod_name in ['matplotlib', 'matplotlib.pyplot', 'matplotlib.image'])
+
+import librosa
+
+
 p = pyaudio.PyAudio()
 
-n_channels=6
+n_channels=2
+device_index=2
+sample_rate=48000
+frames_per_buffer=1024 * 1
 
 def callback(in_data, frame_count, time_info, status, last_theta=[0]):
     start_theta = last_theta[0]
@@ -17,12 +27,14 @@ def callback(in_data, frame_count, time_info, status, last_theta=[0]):
     # print(sin_data)
     data = np.zeros((frame_count, n_channels), dtype=np.float32)
     # print(data.shape)
-    data[:,5] = np.floor(sin_data * (2**15))
+    data[:,0] = np.floor(sin_data * (2**15))
     print(data)
-
+ 
     data *= 0.1
 
     npdata = np.asarray(data, dtype=np.int16)
+    #npdata = librosa.util.buf_to_int(data, n_bytes=2)
+    print("zero_elements: {}".format(np.count_nonzero(npdata[:,0] == 0)))
 
     #print(npdata)
     return (npdata, pyaudio.paContinue)
@@ -34,14 +46,19 @@ def bound_callback(in_data, frame_count, time_info, status):
 
 stream = p.open(format=p.get_format_from_width(2),
                 channels=n_channels,
-                rate=41000,
+                rate=sample_rate,
                 output=True,
-                stream_callback=callback)
+                output_device_index=device_index,
+#                frames_per_buffer=frames_per_buffer,
+#                stream_callback=callback
+)
 
 stream.start_stream()
 
 while stream.is_active():
-    time.sleep(0.1)
+    (data, flags) = bound_callback(None, frames_per_buffer, None, None)
+    stream.write(data, frames_per_buffer)
+    #time.sleep(0.1)
 
 stream.stop_stream()
 stream.close()
