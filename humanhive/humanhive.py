@@ -51,6 +51,12 @@ class HumanHive:
     def is_active(self):
         return self.audio_interface.is_active()
 
+    def run(self):
+        """
+        Runs a batch of processing.
+        """
+        return self.audio_interface.run()
+
 class Playback:
     """
     Manages the playback of sounds. Keeps active samples and controls volumes
@@ -175,12 +181,14 @@ class AudioInterface:
                  n_channels,
                  sample_rate,
                  sample_width,
-                 device_id):
+                 device_id,
+                 frame_count=1024):
         self.playback = playback
         self.recording = recording
         self.n_channels = n_channels
         self.sample_rate = sample_rate
         self.sample_width = sample_width
+        self.frame_count = frame_count
 
         # Initialise pyaudio interface
         self.p = pyaudio.PyAudio()
@@ -195,7 +203,8 @@ class AudioInterface:
             output_device_index=device_id,
             # input=True,
             output=True,
-            stream_callback=self.audio_callback)
+            #stream_callback=self.audio_callback
+            )
         print("Finished initialising audio")
 
 
@@ -223,6 +232,11 @@ class AudioInterface:
 
     def is_active(self):
         return self.stream.is_active()
+
+    def run(self):
+        (data, status) = self.audio_callback(
+            None, self.frame_count, None, None)
+        self.stream.write(data, self.frame_count)
 
 
 

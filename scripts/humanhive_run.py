@@ -69,7 +69,8 @@ if __name__ == "__main__":
 
     while humanhive.is_active():
         # print("is active")
-        time.sleep(0.1)
+        humanhive.run()
+        # time.sleep(0.1)
 
     print("Closing audio stream")
     humanhive.close_stream()
