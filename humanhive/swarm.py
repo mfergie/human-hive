@@ -25,7 +25,12 @@ class CosSinSwarm:
 
 
 class SwarmLinear:
-    def __init__(self, hives, swarm_speed, sample_rate):
+    def __init__(self,
+                 hives,
+                 swarm_speed,
+                 sample_rate,
+                 p_change_direction=0.2,
+                 p_jump_hives=0.1):
         """
         Initialise a swarm.
 
@@ -47,6 +52,9 @@ class SwarmLinear:
         self.swarm_speed_upf = self.swarm_speed / sample_rate
         self.sample_rate = sample_rate
 
+        self.p_change_direction = p_change_direction
+        self.p_jump_hives = p_jump_hives
+
         # Initialise movement. Set initial position to hive 0, and set them off
         # towards hive 1
         self.swarm_position = self.hives[0]
@@ -56,6 +64,9 @@ class SwarmLinear:
         # to linger at the current position.
         self.n_linger_frames = 0
 
+        # Stores the direction of the swarm movement as +1 or -1. This is
+        # randomly sampled from p_change_direction
+        self.swarm_direction = 1
 
     def sample_swarm_positions(self, n_samples):
         """
@@ -135,7 +146,20 @@ class SwarmLinear:
         self.swarm_position = positions[-1]
         if movement_end_frame < n_samples:
             # We reached destination, sample new destination hive
-            self.destination_hive = (self.destination_hive + 1) % self.n_hives
+
+            # Change direction?
+            if np.random.rand(1)[0] < self.p_change_direction:
+                # Yes, change direction
+                self.swarm_direction *= -1
+                print("Swapping direction: {}".format(self.swarm_direction))
+            self.destination_hive = (self.destination_hive + self.swarm_direction) % self.n_hives
+
+            # Jump hives?
+            if np.random.rand(1)[0] < self.p_jump_hives:
+                # Yes, generate a random destination hive
+                self.destination_hive = np.random.randint(self.n_hives)
+                print("Jumping hives, new destination: {}".format(
+                    self.destination_hive))
 
             # Sample a linger time
             self.n_linger_frames = (

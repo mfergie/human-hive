@@ -11,7 +11,7 @@ def test_recording():
         onesecond_file, mono=True)
 
     print(audio_data.dtype)
-    recording = hh.Recording(None)
+    recording = hh.Recording(None, 0)
 
     n_frames_per_chunk = 1024
 

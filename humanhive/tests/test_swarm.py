@@ -38,7 +38,12 @@ def test_swarm_linear():
         [1, 1]
     ]
 
-    test_swarm = swarm.SwarmLinear(hives, 1.4, 1024)
+    test_swarm = swarm.SwarmLinear(
+        hives,
+        1.4,
+        1024,
+        p_change_direction=0,
+        p_jump_hives=0)
 
     positions = test_swarm.sample_swarm_positions(1024)
 
