@@ -14,12 +14,13 @@ p = pyaudio.PyAudio()
 
 def callback(in_data, frame_count, time_info, status):
     data = wf.readframes(frame_count)
-    npdata = np.frombuffer(data, dtype=np.int16)
-    return (npdata, pyaudio.paContinue)
+    # npdata = np.frombuffer(data, dtype=np.int16)
+    return (data, pyaudio.paContinue)
 
 stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
                 channels=wf.getnchannels(),
                 rate=wf.getframerate(),
+                output_device_index=2,
                 output=True,
                 stream_callback=callback)
 
