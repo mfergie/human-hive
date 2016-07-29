@@ -12,15 +12,20 @@ wf = wave.open(sys.argv[1], 'rb')
 
 p = pyaudio.PyAudio()
 
+DEVICE_ID=2
+
 def callback(in_data, frame_count, time_info, status):
     data = wf.readframes(frame_count)
     # npdata = np.frombuffer(data, dtype=np.int16)
     return (data, pyaudio.paContinue)
 
+print("Device parameters: {}".format(p.get_default_output_device_info()))
+
+
 stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
                 channels=wf.getnchannels(),
                 rate=wf.getframerate(),
-                output_device_index=2,
+                output_device_index=DEVICE_ID,
                 output=True,
                 stream_callback=callback)
 
