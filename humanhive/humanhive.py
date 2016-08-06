@@ -2,9 +2,37 @@
 Contains the main human hive class for operation.
 """
 import time
+from multiprocessing import Queue, Process
+from threading import Thread
 import numpy as np
 import pyaudio
 from . import samplestream, swarm, hive, utils
+
+def playback_consumer(playback_queue,
+                      recording_queue,
+                      n_channels,
+                      sample_rate,
+                      sample_width,
+                      device_id):
+    """
+    Creates a PlaybackQueueConsumer and audio interface and configured to
+    retrieve and send samples to the playback and recording queues respectively.
+    This function then enters a blocking loop to process audio data.
+    """
+    playback_consumer = PlaybackQueueConsumer(playback_queue)
+
+    audio_interface = AudioInterface(
+        playback_consumer,
+        recording_queue,
+        n_channels,
+        sample_rate,
+        sample_width,
+        device_id)
+
+    print("Starting audio stream")
+    audio_interface.start_stream()
+    print("Calling Audio Interface.run()")
+    audio_interface.run()
 
 class HumanHive:
     """
@@ -26,37 +54,40 @@ class HumanHive:
 
         self.recording = Recording(self.source_bank, 4*sample_rate)
 
-        self.playback = Playback(
+        self.chunks_queue_size = 100
+
+        self.playback_queue = Queue(self.chunks_queue_size)
+        self.recording_queue = None
+
+        self.n_samples_per_chunk = 1024
+
+        self.playback_producer = PlaybackQueueProducer(
             self.source_bank,
+            self.playback_queue,
             self.n_channels,
             self.sample_rate,
+            self.n_samples_per_chunk,
             master_volume=master_volume)
 
-        self.audio_interface = AudioInterface(
-            self.playback,
-            self.recording,
-            self.n_channels,
-            self.sample_rate,
-            self.sample_width,
-            device_id)
+        self.audio_interface_process = Process(
+            target=playback_consumer,
+            args=(
+                self.playback_queue,
+                self.recording_queue,
+                self.n_channels,
+                self.sample_rate,
+                self.sample_width,
+                device_id))
 
+        self.audio_interface_process.start()
 
-
-    def start_stream(self):
-        self.audio_interface.start_stream()
-
-
-    def close_stream(self):
-        self.audio_interface.close_stream()
-
-    def is_active(self):
-        return self.audio_interface.is_active()
 
     def run(self):
         """
-        Runs a batch of processing.
+        Enter main HumanHive loop.
         """
-        return self.audio_interface.run()
+        self.playback_producer.run()
+
 
 class Playback:
     """
@@ -85,6 +116,61 @@ class Playback:
         samples *= self.master_volume
         return np.asarray(samples, np.int16)
 
+
+class PlaybackQueueProducer:
+    """
+    Keeps a queue filled with audio samples.
+    """
+    def __init__(self,
+                 source_bank,
+                 chunks_queue,
+                 n_channels,
+                 sample_rate,
+                 n_samples_per_chunk,
+                 master_volume=1.0):
+
+        self.source_bank = source_bank
+        self.chunks_queue = chunks_queue
+
+        self.n_channels = n_channels
+        self.sample_rate = sample_rate
+        self.n_samples_per_chunk = n_samples_per_chunk
+        self.master_volume = master_volume
+
+
+    def run(self):
+        """
+        Generates samples and inserts them into queue.
+        """
+        while True:
+            print("Producing")
+            samples = np.zeros(
+                (self.n_samples_per_chunk, self.n_channels), dtype=np.float)
+            for source in self.source_bank.sources:
+                print(samples)
+                samples += source.get_frames(self.n_samples_per_chunk)
+
+            samples *= self.master_volume
+
+            # Insert into queue, block if queue fills up.
+            self.chunks_queue.put(samples, block=True)
+
+
+class PlaybackQueueConsumer:
+    """
+    This is a class that meets the playback interface. Instead of computing
+    samples online it will retrieve them from a shared queue populated by a
+    PlaybackQueueProducer.
+    """
+    def __init__(self,
+                 chunks_queue):
+        self.chunks_queue = chunks_queue
+
+    def retrieve_samples(self, n_frames):
+        print("Consuming")
+        samples = self.chunks_queue.get(block=True)
+        print(samples)
+        return samples
 
 class Recording:
     """
@@ -180,14 +266,14 @@ class AudioInterface:
 
     def __init__(self,
                  playback,
-                 recording,
+                 recording_queue,
                  n_channels,
                  sample_rate,
                  sample_width,
                  device_id,
                  frame_count=1024):
         self.playback = playback
-        self.recording = recording
+        self.recording_queue = recording_queue
         self.n_channels = n_channels
         self.sample_rate = sample_rate
         self.sample_width = sample_width
@@ -214,7 +300,8 @@ class AudioInterface:
     def audio_callback(self, in_data, frame_count, time_info, status):
         st = time.time()
         # Send recording data
-        self.recording.process_audio(in_data, frame_count)
+        if self.recording_queue is not None:
+            self.recording_queue.put((in_data, frame_count))
 
         # Get output audio
         samples = self.playback.retrieve_samples(frame_count)
@@ -239,9 +326,10 @@ class AudioInterface:
         return self.stream.is_active()
 
     def run(self):
-        (data, status) = self.audio_callback(
-            None, self.frame_count, None, None)
-        self.stream.write(data, self.frame_count)
+        while True:
+            (data, status) = self.audio_callback(
+                None, self.frame_count, None, None)
+            self.stream.write(data, self.frame_count)
 
 
 
