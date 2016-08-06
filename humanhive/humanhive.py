@@ -170,6 +170,8 @@ class Recording:
                 utils.compute_audio_volume(in_data) / (self.n_ambient_chunks + 1))
             self.ambient_volume = existing_ambient_volume + current_contribution
 
+
+
 class AudioInterface:
     """
     Manages the sound interface. This manages the main callback for the audio
