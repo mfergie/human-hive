@@ -1,6 +1,7 @@
 """
 Contains the main human hive class for operation.
 """
+import time
 import numpy as np
 import pyaudio
 from . import samplestream, swarm, hive, utils
@@ -209,13 +210,15 @@ class AudioInterface:
 
 
     def audio_callback(self, in_data, frame_count, time_info, status):
-
+        st = time.time()
         # Send recording data
         self.recording.process_audio(in_data, frame_count)
 
         # Get output audio
         samples = self.playback.retrieve_samples(frame_count)
 
+        te = time.time() - st
+        print("Time elapsed: {}".format(te))
         return (samples, pyaudio.paContinue)
 
 
