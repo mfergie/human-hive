@@ -92,6 +92,7 @@ class HumanHive:
                 device_id))
 
         print("Launching process")
+        self.audio_interface_process.daemmon = True
         self.audio_interface_process.start()
 
 
