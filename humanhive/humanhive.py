@@ -18,6 +18,7 @@ def playback_consumer(playback_queue,
                       n_channels,
                       sample_rate,
                       sample_width,
+                      n_frames_per_chunk,
                       device_id):
     """
     Creates a PlaybackQueueConsumer and audio interface and configured to
@@ -35,7 +36,8 @@ def playback_consumer(playback_queue,
         n_channels,
         sample_rate,
         sample_width,
-        device_id)
+        device_id,
+        n_frames_per_chunk)
 
     print("playback_consumer: Starting audio stream in {}".format(proc_name))
     audio_interface.start_stream()
@@ -69,14 +71,14 @@ class HumanHive:
         self.playback_queue = ctx.Queue(self.chunks_queue_size)
         self.recording_queue = None
 
-        self.n_samples_per_chunk = 1024
+        self.n_frames_per_chunk = 1024
 
         self.playback_producer = PlaybackQueueProducer(
             self.source_bank,
             self.playback_queue,
             self.n_channels,
             self.sample_rate,
-            self.n_samples_per_chunk,
+            self.n_frames_per_chunk,
             master_volume=master_volume)
 
         self.audio_interface_process = ctx.Process(
@@ -87,6 +89,7 @@ class HumanHive:
                 self.n_channels,
                 self.sample_rate,
                 self.sample_width,
+                self.n_frames_per_chunk,
                 device_id))
 
         print("Launching process")

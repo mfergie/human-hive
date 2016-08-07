@@ -22,6 +22,8 @@ class AudioInterface:
         self.sample_rate = sample_rate
         self.sample_width = sample_width
         self.frame_count = frame_count
+    
+        print("frame_count: {}".format(frame_count))
 
         # Initialise pyaudio interface
         self.p = pyaudio.PyAudio()
@@ -51,7 +53,7 @@ class AudioInterface:
         samples = self.playback.retrieve_samples(frame_count)
 
         te = time.time() - st
-        #print("Time elapsed: {}".format(te))
+        print("Time elapsed: {}".format(te))
 
         return (samples, pyaudio.paContinue)
 
