@@ -1,5 +1,5 @@
-import pyaudio
 import time
+import alsaaudio
 
 
 class AudioInterface:
@@ -25,21 +25,14 @@ class AudioInterface:
 
         print("frame_count: {}".format(frame_count))
 
-        # Initialise pyaudio interface
-        self.p = pyaudio.PyAudio()
+        self.in_stream = alsaaudio.PCM(
+            cardindex=device_id)
+        self.in_stream.setchannels(self.n_channels)
+        self.in_stream.setrate(self.sample_rate)
+        self.in_stream.setformat(alsaaudio.PCM_FORMAT_S16_LE)
+        self.in_stream.setperiodsize(self.frame_count)
 
-        print("Device parameters for device with id: {}\n{}".format(
-            device_id, self.p.get_device_info_by_index(device_id)))
 
-        self.stream = self.p.open(
-            format=self.p.get_format_from_width(2),
-            channels=self.n_channels,
-            rate=self.sample_rate,
-            output_device_index=device_id,
-            # input=True,
-            output=True,
-            #stream_callback=self.audio_callback,
-            )
         print("Finished initialising audio")
 
 
@@ -77,5 +70,5 @@ class AudioInterface:
             (data, status) = self.audio_callback(
                 None, self.frame_count, None, None)
             st = time.time()
-            self.stream.write(data, self.frame_count, exception_on_underflow=False)
+            self.in_stream.write(data)
             print("Write time: {}".format(time.time() - st))
