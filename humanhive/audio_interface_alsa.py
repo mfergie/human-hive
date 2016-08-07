@@ -36,10 +36,6 @@ class AudioInterface:
         print("Finished initialising audio")
 
 
-    def audio_callback(self, in_data, frame_count, time_info, status):
-        return samples
-
-
     def start_stream(self):
         pass
 
@@ -54,7 +50,7 @@ class AudioInterface:
     def run(self):
         while True:
             st = time.time()
-            
+
             # Send recording data
             # if self.recording_queue is not None:
             #     self.recording_queue.put((in_data, frame_count))
