@@ -64,9 +64,7 @@ class HumanHive:
 
         self.chunks_queue_size = 100
 
-        ctx = multiprocessing.get_context('spawn')
-
-        self.playback_queue = ctx.Queue(self.chunks_queue_size)
+        self.playback_queue = Queue(self.chunks_queue_size)
         self.recording_queue = None
 
         self.n_samples_per_chunk = 1024
@@ -79,7 +77,7 @@ class HumanHive:
             self.n_samples_per_chunk,
             master_volume=master_volume)
 
-        self.audio_interface_process = ctx.Process(
+        self.audio_interface_process = Thread(
             target=playback_consumer,
             args=(
                 self.playback_queue,
