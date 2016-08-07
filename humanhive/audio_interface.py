@@ -49,13 +49,11 @@ class AudioInterface:
         if self.recording_queue is not None:
             self.recording_queue.put((in_data, frame_count))
 
-        print("qsize: {}".format(self.playback.qsize()))
         # Get output audio
         samples = self.playback.get()
 
-
         te = time.time() - st
-        print("Time elapsed: {}".format(te))
+        # print("Time elapsed: {}".format(te))
 
         return (samples, pyaudio.paContinue)
 
@@ -80,4 +78,4 @@ class AudioInterface:
                 None, self.frame_count, None, None)
             st = time.time()
             self.stream.write(data, self.frame_count, exception_on_underflow=False)
-            print("Write time: {}".format(time.time() - st))
+            # print("Write time: {}".format(time.time() - st))
