@@ -52,18 +52,15 @@ class AudioInterface:
 
 
     def start_stream(self):
-        self.stream.start_stream()
+        pass
 
 
     def close_stream(self):
-        self.stream.stop_stream()
-        self.stream.close()
-
-        self.p.terminate()
+        pass
 
 
     def is_active(self):
-        return self.stream.is_active()
+        return True
 
     def run(self):
         while True:

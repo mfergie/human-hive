@@ -11,7 +11,7 @@ from . import samplestream, swarm, hive, utils
 from .playback import PlaybackQueueProducer
 from .recording import Recording
 from .sources import SourceBank
-from .audio_interface import AudioInterface
+from .audio_interface_alsa import AudioInterface
 
 def playback_consumer(playback_queue,
                       recording_queue,
