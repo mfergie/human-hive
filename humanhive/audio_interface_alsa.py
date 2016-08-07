@@ -9,14 +9,15 @@ class AudioInterface:
     """
 
     def __init__(self,
-                 playback,
+                 playback_queue,
                  recording_queue,
                  n_channels,
                  sample_rate,
                  sample_width,
-                 device_id,
+                 output_device_id,
+                 input_device_id,
                  frame_count=1024):
-        self.playback = playback
+        self.playback_queue = playback_queue
         self.recording_queue = recording_queue
         self.n_channels = n_channels
         self.sample_rate = sample_rate
@@ -25,12 +26,27 @@ class AudioInterface:
 
         print("frame_count: {}".format(frame_count))
 
+        print("available cards: {}".format(alsaaudio.cards()))
+        print("available PCMs: {}".format(alsaaudio.pcms()))
+
         self.in_stream = alsaaudio.PCM(
-            cardindex=device_id)
-        self.in_stream.setchannels(self.n_channels)
+            type=alsaaudio.PCM_CAPTURE,
+            mode=alsaaudio.PCM_NONBLOCK,
+            device=input_device_id)
+        self.in_stream.setchannels(2)
         self.in_stream.setrate(self.sample_rate)
         self.in_stream.setformat(alsaaudio.PCM_FORMAT_S16_LE)
         self.in_stream.setperiodsize(self.frame_count)
+        print("in_stream card: {}".format(self.in_stream.cardname()))
+
+        self.out_stream = alsaaudio.PCM(
+            type=alsaaudio.PCM_PLAYBACK,
+            device=output_device_id)
+        self.out_stream.setchannels(self.n_channels)
+        self.out_stream.setrate(self.sample_rate)
+        self.out_stream.setformat(alsaaudio.PCM_FORMAT_S16_LE)
+        self.out_stream.setperiodsize(self.frame_count)
+        print("out_stream card: {}".format(self.out_stream.cardname()))
 
 
         print("Finished initialising audio")
@@ -52,15 +68,18 @@ class AudioInterface:
             st = time.time()
 
             # Send recording data
-            # if self.recording_queue is not None:
-            #     self.recording_queue.put((in_data, frame_count))
+            if self.recording_queue is not None:
+                pass
+                in_data = self.in_stream.read()
+                if in_data[0]:
+                     self.recording_queue.put(in_data)
 
             # Get output audio
-            samples = self.playback.get()
+            samples = self.playback_queue.get()
 
             te = time.time() - st
             # print("Time elapsed: {}".format(te))
 
             st = time.time()
-            self.in_stream.write(samples)
+            self.out_stream.write(samples)
             # print("Write time: {}".format(time.time() - st))
