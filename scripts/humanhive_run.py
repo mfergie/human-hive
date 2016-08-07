@@ -28,10 +28,17 @@ def build_parser():
         help="Audio file containing swarm sample")
 
     parser.add_argument(
-        "--device-id",
-        help="The ID for the sound card to use.",
+        "--output-device-id",
+        help="The ID for the output sound card to use.",
         default=0,
         type=int)
+
+    parser.add_argument(
+        "--input-device-id",
+        help="The ID for the input sound card to use.",
+        default=0,
+        type=int)
+
 
     parser.add_argument(
         "--recorded-samples-dir",
@@ -46,12 +53,13 @@ def build_parser():
 if __name__ == "__main__":
     args = build_parser().parse_args()
 
-    sample_rate = utils.get_sample_rate_for_device(args.device_id)
+    sample_rate = utils.get_sample_rate_for_device(args.output_device_id)
 
     print("Initialising...")
     humanhive = HumanHive(
         n_channels=args.n_channels,
-        device_id=args.device_id,
+        output_device_id=args.output_device_id,
+        input_device_id=args.input_device_id,
         sample_rate=sample_rate,
         master_volume=1.0)
 

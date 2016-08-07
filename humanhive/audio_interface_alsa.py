@@ -9,14 +9,14 @@ class AudioInterface:
     """
 
     def __init__(self,
-                 playback,
+                 playback_queue,
                  recording_queue,
                  n_channels,
                  sample_rate,
                  sample_width,
                  device_id,
                  frame_count=1024):
-        self.playback = playback
+        self.playback_queue = playback
         self.recording_queue = recording_queue
         self.n_channels = n_channels
         self.sample_rate = sample_rate
@@ -31,6 +31,14 @@ class AudioInterface:
         self.in_stream.setrate(self.sample_rate)
         self.in_stream.setformat(alsaaudio.PCM_FORMAT_S16_LE)
         self.in_stream.setperiodsize(self.frame_count)
+
+        self.out_stream = alsaaudio.PCM(
+            mode=alsaaudio.PCM_CAPTURE,
+            cardindex=device_id)
+        self.out_stream.setchannels(1)
+        self.out_stream.setrate(self.sample_rate)
+        self.out_stream.setformat(alsaaudio.PCM_FORMAT_S16_LE)
+        self.out_stream.setperiodsize(self.frame_count)
 
 
         print("Finished initialising audio")
@@ -52,11 +60,12 @@ class AudioInterface:
             st = time.time()
 
             # Send recording data
-            # if self.recording_queue is not None:
-            #     self.recording_queue.put((in_data, frame_count))
+            if self.recording_queue is not None:
+                in_data = self.out_stream.read()
+                self.recording_queue.put(in_data)
 
             # Get output audio
-            samples = self.playback.get()
+            samples = self.playback_queue.get()
 
             te = time.time() - st
             # print("Time elapsed: {}".format(te))
