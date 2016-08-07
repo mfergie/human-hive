@@ -22,7 +22,7 @@ class AudioInterface:
         self.sample_rate = sample_rate
         self.sample_width = sample_width
         self.frame_count = frame_count
-    
+
         print("frame_count: {}".format(frame_count))
 
         # Initialise pyaudio interface
@@ -50,7 +50,7 @@ class AudioInterface:
             self.recording_queue.put((in_data, frame_count))
 
         # Get output audio
-        samples = self.playback.retrieve_samples(frame_count)
+        samples = self.playback.get()
 
         te = time.time() - st
         print("Time elapsed: {}".format(te))

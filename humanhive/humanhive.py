@@ -25,13 +25,12 @@ def playback_consumer(playback_queue,
     retrieve and send samples to the playback and recording queues respectively.
     This function then enters a blocking loop to process audio data.
     """
-    playback_consumer = PlaybackQueueConsumer(playback_queue)
 
     proc_name = multiprocessing.current_process().name
     print("playback_consumer: Running on {}".format(proc_name))
 
     audio_interface = AudioInterface(
-        playback_consumer,
+        playback_queue,
         recording_queue,
         n_channels,
         sample_rate,

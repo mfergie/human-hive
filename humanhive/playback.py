@@ -64,18 +64,3 @@ class PlaybackQueueProducer:
             samples_int16 = np.asarray(samples, np.int16)
             # Insert into queue, block if queue fills up.
             self.chunks_queue.put(samples_int16, block=True)
-
-
-class PlaybackQueueConsumer:
-    """
-    This is a class that meets the playback interface. Instead of computing
-    samples online it will retrieve them from a shared queue populated by a
-    PlaybackQueueProducer.
-    """
-    def __init__(self,
-                 chunks_queue):
-        self.chunks_queue = chunks_queue
-
-    def retrieve_samples(self, n_frames):
-        samples = self.chunks_queue.get(block=True)
-        return samples
