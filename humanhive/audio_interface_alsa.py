@@ -14,7 +14,8 @@ class AudioInterface:
                  n_channels,
                  sample_rate,
                  sample_width,
-                 device_id,
+                 output_device_id,
+                 input_device_id,
                  frame_count=1024):
         self.playback_queue = playback
         self.recording_queue = recording_queue
@@ -26,7 +27,7 @@ class AudioInterface:
         print("frame_count: {}".format(frame_count))
 
         self.in_stream = alsaaudio.PCM(
-            cardindex=device_id)
+            cardindex=output_device_id)
         self.in_stream.setchannels(self.n_channels)
         self.in_stream.setrate(self.sample_rate)
         self.in_stream.setformat(alsaaudio.PCM_FORMAT_S16_LE)
@@ -34,7 +35,7 @@ class AudioInterface:
 
         self.out_stream = alsaaudio.PCM(
             mode=alsaaudio.PCM_CAPTURE,
-            cardindex=device_id)
+            cardindex=input_device_id)
         self.out_stream.setchannels(1)
         self.out_stream.setrate(self.sample_rate)
         self.out_stream.setformat(alsaaudio.PCM_FORMAT_S16_LE)
