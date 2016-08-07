@@ -17,7 +17,7 @@ class AudioInterface:
                  output_device_id,
                  input_device_id,
                  frame_count=1024):
-        self.playback_queue = playback
+        self.playback_queue = playback_queue
         self.recording_queue = recording_queue
         self.n_channels = n_channels
         self.sample_rate = sample_rate
