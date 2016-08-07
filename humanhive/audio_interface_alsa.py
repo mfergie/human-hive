@@ -26,6 +26,9 @@ class AudioInterface:
 
         print("frame_count: {}".format(frame_count))
 
+        print("available cards: {}".format(alsaaudio.cards()))
+        print("available PCMs: {}".format(alsaaudio.pcms()))
+
         self.in_stream = alsaaudio.PCM(
             mode=alsaaudio.PCM_CAPTURE,
             cardindex=input_device_id)
@@ -33,14 +36,16 @@ class AudioInterface:
         self.in_stream.setrate(self.sample_rate)
         self.in_stream.setformat(alsaaudio.PCM_FORMAT_S16_LE)
         self.in_stream.setperiodsize(self.frame_count)
-
-        self.out_stream = alsaaudio.PCM(
-            mode=alsaaudio.PCM_PLAYBACK,
-            cardindex=output_device_id)
-        self.out_stream.setchannels(self.n_channels)
-        self.out_stream.setrate(self.sample_rate)
-        self.out_stream.setformat(alsaaudio.PCM_FORMAT_S16_LE)
-        self.out_stream.setperiodsize(self.frame_count)
+        print("in_stream card: {}".format(self.in_stream.cardname()))
+      
+        #self.out_stream = alsaaudio.PCM(
+        #    mode=alsaaudio.PCM_PLAYBACK,
+        #    cardindex=output_device_id)
+        #self.out_stream.setchannels(self.n_channels)
+        #self.out_stream.setrate(self.sample_rate)
+        #self.out_stream.setformat(alsaaudio.PCM_FORMAT_S16_LE)
+        #self.out_stream.setperiodsize(self.frame_count)
+        #print("out_stream card: {}".format(self.out_stream.cardname()))
 
 
         print("Finished initialising audio")
@@ -63,6 +68,7 @@ class AudioInterface:
 
             # Send recording data
             if self.recording_queue is not None:
+                pass
                 in_data = self.in_stream.read()
                 self.recording_queue.put(in_data)
 
@@ -73,5 +79,5 @@ class AudioInterface:
             # print("Time elapsed: {}".format(te))
 
             st = time.time()
-            self.out_stream.write(samples)
+            #self.out_stream.write(samples)
             # print("Write time: {}".format(time.time() - st))
