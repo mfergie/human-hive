@@ -59,8 +59,8 @@ class AudioInterface:
             samples = self.playback.get()
 
             te = time.time() - st
-            print("Time elapsed: {}".format(te))
+            # print("Time elapsed: {}".format(te))
 
             st = time.time()
             self.in_stream.write(samples)
-            print("Write time: {}".format(time.time() - st))
+            # print("Write time: {}".format(time.time() - st))
