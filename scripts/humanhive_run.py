@@ -55,7 +55,7 @@ def build_parser():
 if __name__ == "__main__":
     args = build_parser().parse_args()
 
-    sample_rate = utils.get_sample_rate_for_device(args.output_device_id)
+    sample_rate = 48000#utils.get_sample_rate_for_device(args.output_device_id)
 
     print("Initialising...")
     humanhive = HumanHive(
