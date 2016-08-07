@@ -14,9 +14,10 @@ p = pyaudio.PyAudio()
 
 n_bytes_to_test = 1024 * 2 * 6
 
-DEVICE_ID=2
+DEVICE_ID=4
 
 def callback(in_data, frame_count, time_info, status):
+    st = time.time()
     data = wf.readframes(frame_count)
     # npdata = np.frombuffer(data, dtype=np.int16)
     # print("len(data): {}, frame_count: {}".format(len(data), frame_count))
@@ -24,6 +25,8 @@ def callback(in_data, frame_count, time_info, status):
         wf.rewind()
         data = wf.readframes(frame_count)
 	print("Rewinding")
+    et = time.time() - st
+    print("elapsed time: {}".format(et))
     return (data, pyaudio.paContinue)
 
 print("Device parameters: {}".format(p.get_device_info_by_index(DEVICE_ID)))
