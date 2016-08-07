@@ -62,8 +62,9 @@ class PlaybackQueueProducer:
 
             samples *= self.master_volume
 
+            samples_int16 = np.asarray(samples, np.int16)
             # Insert into queue, block if queue fills up.
-            self.chunks_queue.put(samples, block=True)
+            self.chunks_queue.put(samples_int16, block=True)
 
 
 class PlaybackQueueConsumer:
@@ -79,5 +80,4 @@ class PlaybackQueueConsumer:
     def retrieve_samples(self, n_frames):
         print("Consuming")
         samples = self.chunks_queue.get(block=True)
-        print(samples)
         return samples

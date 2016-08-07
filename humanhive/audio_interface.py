@@ -1,4 +1,6 @@
 import pyaudio
+import time
+
 
 class AudioInterface:
     """
@@ -34,7 +36,7 @@ class AudioInterface:
             output_device_index=device_id,
             # input=True,
             output=True,
-            #stream_callback=self.audio_callback
+            #stream_callback=self.audio_callback,
             )
         print("Finished initialising audio")
 
@@ -50,6 +52,7 @@ class AudioInterface:
 
         te = time.time() - st
         print("Time elapsed: {}".format(te))
+
         return (samples, pyaudio.paContinue)
 
 
@@ -71,6 +74,4 @@ class AudioInterface:
         while True:
             (data, status) = self.audio_callback(
                 None, self.frame_count, None, None)
-            print("Writing audio stream:")
-            print(data)
-            self.stream.write(data, self.frame_count)
+            self.stream.write(data, self.frame_count, exception_on_underflow=True)

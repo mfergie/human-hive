@@ -5,6 +5,7 @@ The Human Hive
 import sys
 import time
 import argparse
+import multiprocessing
 
 import numpy as np
 import pyaudio
