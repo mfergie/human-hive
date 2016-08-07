@@ -51,7 +51,7 @@ class AudioInterface:
         samples = self.playback.retrieve_samples(frame_count)
 
         te = time.time() - st
-        print("Time elapsed: {}".format(te))
+        #print("Time elapsed: {}".format(te))
 
         return (samples, pyaudio.paContinue)
 
@@ -74,4 +74,4 @@ class AudioInterface:
         while True:
             (data, status) = self.audio_callback(
                 None, self.frame_count, None, None)
-            self.stream.write(data, self.frame_count, exception_on_underflow=True)
+            self.stream.write(data, self.frame_count, exception_on_underflow=False)

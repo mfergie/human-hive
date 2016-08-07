@@ -54,7 +54,6 @@ class PlaybackQueueProducer:
         Generates samples and inserts them into queue.
         """
         while True:
-            print("Producing")
             samples = np.zeros(
                 (self.n_samples_per_chunk, self.n_channels), dtype=np.float)
             for source in self.source_bank.sources:
@@ -78,6 +77,5 @@ class PlaybackQueueConsumer:
         self.chunks_queue = chunks_queue
 
     def retrieve_samples(self, n_frames):
-        print("Consuming")
         samples = self.chunks_queue.get(block=True)
         return samples
