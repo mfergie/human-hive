@@ -31,6 +31,7 @@ class AudioInterface:
 
         self.in_stream = alsaaudio.PCM(
             type=alsaaudio.PCM_CAPTURE,
+            mode=alsaaudio.PCM_NONBLOCK,
             device=input_device_id)
         self.in_stream.setchannels(2)
         self.in_stream.setrate(self.sample_rate)
@@ -70,7 +71,8 @@ class AudioInterface:
             if self.recording_queue is not None:
                 pass
                 in_data = self.in_stream.read()
-                self.recording_queue.put(in_data)
+                if in_data[0]:
+                     self.recording_queue.put(in_data)
 
             # Get output audio
             samples = self.playback_queue.get()
