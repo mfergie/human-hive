@@ -64,7 +64,7 @@ if __name__ == "__main__":
             sample_rate=sample_rate))
 
 
-    print("Starting audio stream")
+    print("Entering HumanHive main loop")
     humanhive.run()
 
     print("Exiting")
