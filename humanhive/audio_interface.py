@@ -15,7 +15,7 @@ class AudioInterface:
                  sample_rate,
                  sample_width,
                  output_device_id,
-                 input_device_id=None,
+                 input_device_id,
                  frame_count=1024):
         self.playback = playback
         self.recording_queue = recording_queue
@@ -29,20 +29,21 @@ class AudioInterface:
         # Initialise pyaudio interface
         self.p = pyaudio.PyAudio()
 
+        output_device_id = int(output_device_id)
+        input_device_id = int(input_device_id)
+
+
         print("Output device parameters for device with id: {}\n{}".format(
             output_device_id, self.p.get_device_info_by_index(output_device_id)))
         print("Input device parameters for device with id: {}\n{}".format(
             input_device_id, self.p.get_device_info_by_index(input_device_id)))
 
-        if input_device_id is None:
-            input_device_id = output_device_id
-
         self.stream = self.p.open(
             format=self.p.get_format_from_width(2),
             channels=self.n_channels,
             rate=self.sample_rate,
-            output_device_index=int(output_device_id),
-            input_device_index=int(input_device_id),
+            output_device_index=output_device_id,
+            input_device_index=input_device_id,
             input=True,
             output=True,
             #stream_callback=self.audio_callback,
