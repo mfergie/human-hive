@@ -51,6 +51,20 @@ def playback_consumer(playback_queue,
     print("playback_consumer: Calling Audio Interface.run()")
     audio_interface.run()
 
+
+def recording_consumer(recording_queue, sample_rate):
+    """
+    Sets up the recording consumer.
+    """
+    proc_name = multiprocessing.current_process().name
+    print("recording_consumer: Running on {}".format(proc_name))
+
+    recording = Recording(
+        None, recording_queue, 4*sample_rate)
+    print("Entering recording.run()")
+    recording.run()
+
+
 class HumanHive:
     """
     HumanHive provides the overall access and control to the human hive system.
@@ -70,14 +84,12 @@ class HumanHive:
 
         self.source_bank = SourceBank()
 
-        self.recording = Recording(self.source_bank, 4*sample_rate)
-
         self.chunks_queue_size = 100
 
         ctx = multiprocessing.get_context('spawn')
 
         self.playback_queue = ctx.Queue(self.chunks_queue_size)
-        self.recording_queue = None
+        self.recording_queue = ctx.Queue(self.chunks_queue_size)
 
         self.n_frames_per_chunk = 1024
 
@@ -101,9 +113,19 @@ class HumanHive:
                 output_device_id,
                 input_device_id))
 
-        print("Launching process")
+        self.recording_process = ctx.Process(
+            target=recording_consumer,
+            args=(
+                self.recording_queue,
+                self.sample_rate))
+
+        print("Launching processes")
         self.audio_interface_process.daemmon = True
         self.audio_interface_process.start()
+
+        self.recording_process.daemmon = True
+        self.recording_process.start()
+
 
 
     def run(self):

@@ -6,8 +6,9 @@ class Recording:
     and then directs these samples to a sample bank.
     """
 
-    def __init__(self, sample_bank, n_samples_buffer):
-        self.sample_bank = sample_bank
+    def __init__(self, source_bank, recording_queue, n_samples_buffer):
+        self.source_bank = source_bank
+        self.recording_queue = recording_queue
 
         # Stores a list of frames which make up the current sample. Initialised
         # to None to indicate that there is no current sample being recorded.
@@ -29,13 +30,24 @@ class Recording:
         # Stores changing volumes over time for analysis
         self.volume_buffer = []
 
+    def run(self):
+        """
+        Puts the recording module into a running mode. Consumes data from
+        recording queue and processes it.
+        """
+        while True:
+            frame_count, in_data = self.recording_queue.get()
+            self.process_audio(in_data, frame_count)
+
     def process_audio(self, in_data, frame_count):
         """
         Processes incoming audio data. Segments when a voice is detected and
         records sample. This is then saved to the sample_bank.
         """
 
-        # in_data = np.frombuffer(in_data, dtype=np.int16)
+        in_data = np.frombuffer(in_data, dtype=np.int16)
+
+        print("frame min: {}, frame_max: {}".format(in_data.min(), in_data.max()))
         #
         # if self.current_sample is None:
         #     self.update_ambient_volume(in_data)

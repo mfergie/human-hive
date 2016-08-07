@@ -47,23 +47,8 @@ class AudioInterface:
             output=True,
             #stream_callback=self.audio_callback,
             )
+
         print("Finished initialising audio")
-
-
-    def audio_callback(self, in_data, frame_count, time_info, status):
-        st = time.time()
-        # Send recording data
-        if self.recording_queue is not None:
-            self.recording_queue.put((in_data, frame_count))
-
-        # Get output audio
-        samples = self.playback.get()
-
-        te = time.time() - st
-        # print("Time elapsed: {}".format(te))
-
-        return (samples, pyaudio.paContinue)
-
 
     def start_stream(self):
         self.stream.start_stream()
@@ -81,8 +66,12 @@ class AudioInterface:
 
     def run(self):
         while True:
-            (data, status) = self.audio_callback(
-                None, self.frame_count, None, None)
-            st = time.time()
-            self.stream.write(data, self.frame_count, exception_on_underflow=False)
-            # print("Write time: {}".format(time.time() - st))
+            # Send recording data
+            if self.recording_queue is not None:
+                in_data = self.stream.read(self.frame_count, exception_on_overflow=False)
+                self.recording_queue.put((self.frame_count, in_data), block=False)
+
+            # Get output audio
+            samples = self.playback.get()
+
+            self.stream.write(samples, self.frame_count, exception_on_underflow=False)
