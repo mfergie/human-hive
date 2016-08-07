@@ -8,7 +8,7 @@ from threading import Thread
 import numpy as np
 import pyaudio
 from . import samplestream, swarm, hive, utils
-from .playback import PlaybackQueueConsumer, PlaybackQueueProducer
+from .playback import PlaybackQueueProducer
 from .recording import Recording
 from .sources import SourceBank
 from .audio_interface import AudioInterface
