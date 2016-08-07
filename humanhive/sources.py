@@ -5,6 +5,19 @@ They provide chunks of frames for playback.
 import numpy as np
 from humanhive import utils, hive, swarm, samplestream
 
+class SourceBank:
+    """
+    Manages the sources that will be played. These are created externally
+    and added in.
+    """
+
+    def __init__(self):
+        self.sources = []
+
+    def add_source(self, source):
+        self.sources.append(source)
+
+
 class SwarmSource:
     """
     This is the source for a normal swarm. Sample plays as if it is moving

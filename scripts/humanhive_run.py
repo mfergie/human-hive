@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 The Human Hive
 """
@@ -5,6 +6,7 @@ The Human Hive
 import sys
 import time
 import argparse
+import multiprocessing
 
 import numpy as np
 import pyaudio
@@ -51,7 +53,7 @@ if __name__ == "__main__":
         n_channels=args.n_channels,
         device_id=args.device_id,
         sample_rate=sample_rate,
-        master_volume=0.2)
+        master_volume=1.0)
 
 
     audio_data = samplestream.load_wave_file(
@@ -64,13 +66,7 @@ if __name__ == "__main__":
             sample_rate=sample_rate))
 
 
-    print("Starting audio stream")
-    humanhive.start_stream()
+    print("Entering HumanHive main loop")
+    humanhive.run()
 
-    while humanhive.is_active():
-        # print("is active")
-        humanhive.run()
-        # time.sleep(0.1)
-
-    print("Closing audio stream")
-    humanhive.close_stream()
+    print("Exiting")
