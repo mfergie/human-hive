@@ -30,14 +30,16 @@ def build_parser():
     parser.add_argument(
         "--output-device-id",
         help="The ID for the output sound card to use.",
-        default=0,
-        type=int)
+        default=None,
+        # type=int
+    )
 
     parser.add_argument(
         "--input-device-id",
         help="The ID for the input sound card to use.",
-        default=0,
-        type=int)
+        default=None,
+        # type=int
+    )
 
 
     parser.add_argument(

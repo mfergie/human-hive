@@ -31,16 +31,16 @@ class AudioInterface:
 
         self.in_stream = alsaaudio.PCM(
             mode=alsaaudio.PCM_CAPTURE,
-            cardindex=input_device_id)
+            device=input_device_id)
         self.in_stream.setchannels(2)
         self.in_stream.setrate(self.sample_rate)
         self.in_stream.setformat(alsaaudio.PCM_FORMAT_S16_LE)
         self.in_stream.setperiodsize(self.frame_count)
         print("in_stream card: {}".format(self.in_stream.cardname()))
-      
+
         #self.out_stream = alsaaudio.PCM(
         #    mode=alsaaudio.PCM_PLAYBACK,
-        #    cardindex=output_device_id)
+        #    device=output_device_id)
         #self.out_stream.setchannels(self.n_channels)
         #self.out_stream.setrate(self.sample_rate)
         #self.out_stream.setformat(alsaaudio.PCM_FORMAT_S16_LE)
