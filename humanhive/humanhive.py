@@ -1,6 +1,7 @@
 """
 Contains the main human hive class for operation.
 """
+import sys
 import time
 import multiprocessing
 from multiprocessing import Queue, Process
@@ -11,7 +12,12 @@ from . import samplestream, swarm, hive, utils
 from .playback import PlaybackQueueProducer
 from .recording import Recording
 from .sources import SourceBank
-from .audio_interface_alsa import AudioInterface
+
+if "linux" in sys.platform:
+    # If using linux, use the ALSA module directly
+    from .audio_interface_alsa import AudioInterface
+else:
+    from .audio_interface import AudioInterface
 
 def playback_consumer(playback_queue,
                       recording_queue,
