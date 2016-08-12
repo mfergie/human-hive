@@ -12,6 +12,7 @@ class AudioInterface:
     def __init__(self,
                  playback,
                  recording_queue,
+                 loopback_queue,
                  n_channels,
                  sample_rate,
                  sample_width,
@@ -20,6 +21,7 @@ class AudioInterface:
                  frame_count=1024):
         self.playback = playback
         self.recording_queue = recording_queue
+        self.loopback_queue = loopback_queue
         self.n_channels = n_channels
         self.sample_rate = sample_rate
         self.sample_width = sample_width
@@ -56,8 +58,6 @@ class AudioInterface:
         self.loopback_stream = self.stream
         self.input_stream = self.stream
 
-        self.loopback_channels_left = [i for i in range(0, self.n_channels//2)]
-        self.loopback_channels_right = [i for i in range(self.n_channels//2, self.n_channels)]
 
     def start_stream(self):
         self.stream.start_stream()
@@ -74,44 +74,22 @@ class AudioInterface:
         return self.stream.is_active()
 
 
-    def loopback_audio(self):
-        """
-        Reads input from the loopback device, and then prepares it for output
-        """
-        loopback_buffer = self.loopback_stream.read(
-            self.frame_count, exception_on_overflow=False)
-
-        loopback_input = np.frombuffer(
-            loopback_buffer, dtype=np.int16).reshape(-1, 2)
-
-
-        # print("ch 0 max: {}, ch 1 max: {}".format(
-        #     np.abs(loopback_input[:,0]).max(), np.abs(loopback_input[:,0]).max()))
-
-        # Now map onto the correct output channels
-        loopback_output = np.zeros(
-            (loopback_input.shape[0], self.n_channels), dtype=np.int16)
-        loopback_output[:,self.loopback_channels_left] = loopback_input[:,[0]]
-        loopback_output[:,self.loopback_channels_right] = loopback_input[:,[1]]
-
-        print("channels max: {}".format(np.abs(loopback_output).max(axis=0)))
-
-        return loopback_output
-
     def process_audio_chunk(self):
+        print("process_audio_chunk")
         # Send recording data
         if self.recording_queue is not None:
             # in_data = self.stream.read(self.frame_count, exception_on_overflow=False)
             # self.recording_queue.put((self.frame_count, in_data), block=False)
             pass
 
-        loopback_samples = self.loopback_audio()
+        if self.loopback_queue is not None:
+            in_data = np.frombuffer(
+                self.stream.read(self.frame_count, exception_on_overflow=False),
+                dtype=np.uint16)
+            self.loopback_queue.put(in_data, block=False)
 
         # Get output audio
-        # samples = self.playback.get()
-
-        # Add in the loopback samples
-        samples = loopback_samples
+        samples = self.playback.get()
 
         self.stream.write(samples, self.frame_count, exception_on_underflow=False)
 
