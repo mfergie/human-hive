@@ -17,22 +17,16 @@ class Mixer:
 
     def process_audio(self):
 
-        print("Mixer: get audio")
         all_samples = []
         for ind, queue in enumerate(self.input_queues):
-            print("Mixer: get queue {}".format(queue))
             try:
-                 all_samples.append(queue.get(block=False))
+                 all_samples.append(queue.get(block=True))
             except Exception as e:
                  print("Queue {} empty: {}".format(ind, e))
 
         samples = sum(all_samples)
-        print("Mixer: got audio")
 
-
-        print("Mixer: putting audio")
         self.output_queue.put(samples)
-        print("Mixer: putted audio")
 
 
     def run(self):

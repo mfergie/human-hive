@@ -44,7 +44,7 @@ class AudioInterface:
 
         self.loopback_stream = alsaaudio.PCM(
             type=alsaaudio.PCM_CAPTURE,
-            mode=alsaaudio.PCM_NONBLOCK,
+            #mode=alsaaudio.PCM_NONBLOCK,
             device=input_device_id)
         self.loopback_stream.setchannels(2)
         self.loopback_stream.setrate(self.sample_rate)
@@ -94,7 +94,7 @@ class AudioInterface:
         if self.loopback_queue is not None:
             in_data = self.loopback_stream.read()
             if in_data[0]:
-                print("rec frame_count: {}".format(in_data[0])
+                print("rec frame_count: {}".format(in_data[0]))
                 in_data = np.frombuffer(
                     in_data[1], dtype=np.int16).reshape(-1, 2)
                 self.loopback_queue.put(in_data)
