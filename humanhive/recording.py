@@ -45,9 +45,11 @@ class Recording:
         records sample. This is then saved to the sample_bank.
         """
 
-        in_data = np.frombuffer(in_data, dtype=np.int16)
+        in_data = np.frombuffer(in_data, dtype=np.int16).reshape(-1, 2)
+        assert in_data.shape[0] == frame_count
 
-        print("frame min: {}, frame_max: {}".format(in_data.min(), in_data.max()))
+        print("ch 0 max: {}, ch 1 max: {}".format(
+            np.abs(in_data[:,0]).max(), np.abs(in_data[:,0]).max()))
         #
         # if self.current_sample is None:
         #     self.update_ambient_volume(in_data)
