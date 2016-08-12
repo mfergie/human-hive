@@ -12,6 +12,7 @@ class AudioInterface:
     def __init__(self,
                  playback_queue,
                  recording_queue,
+                 loopback_queue,
                  n_channels,
                  sample_rate,
                  sample_width,
@@ -20,6 +21,7 @@ class AudioInterface:
                  frame_count=1024):
         self.playback_queue = playback_queue
         self.recording_queue = recording_queue
+        self.loopback_queue = loopback_queue
         self.n_channels = n_channels
         self.sample_rate = sample_rate
         self.sample_width = sample_width
@@ -30,15 +32,26 @@ class AudioInterface:
         print("available cards: {}".format(alsaaudio.cards()))
         print("available PCMs: {}".format(alsaaudio.pcms()))
 
-        self.in_stream = alsaaudio.PCM(
+        # self.in_stream = alsaaudio.PCM(
+        #     type=alsaaudio.PCM_CAPTURE,
+        #     mode=alsaaudio.PCM_NONBLOCK,
+        #     device=input_device_id)
+        # self.in_stream.setchannels(2)
+        # self.in_stream.setrate(self.sample_rate)
+        # self.in_stream.setformat(alsaaudio.PCM_FORMAT_S16_LE)
+        # self.in_stream.setperiodsize(self.frame_count)
+        # print("in_stream card: {}".format(self.in_stream.cardname()))
+
+        self.loopback_stream = alsaaudio.PCM(
             type=alsaaudio.PCM_CAPTURE,
             mode=alsaaudio.PCM_NONBLOCK,
             device=input_device_id)
-        self.in_stream.setchannels(2)
-        self.in_stream.setrate(self.sample_rate)
-        self.in_stream.setformat(alsaaudio.PCM_FORMAT_S16_LE)
-        self.in_stream.setperiodsize(self.frame_count)
-        print("in_stream card: {}".format(self.in_stream.cardname()))
+        self.loopback_stream.setchannels(2)
+        self.loopback_stream.setrate(self.sample_rate)
+        self.loopback_stream.setformat(alsaaudio.PCM_FORMAT_S16_LE)
+        self.loopback_stream.setperiodsize(self.frame_count)
+        print("loopback_stream card: {}".format(self.loopback_stream.cardname()))
+
 
         self.out_stream = alsaaudio.PCM(
             type=alsaaudio.PCM_PLAYBACK,
@@ -51,10 +64,6 @@ class AudioInterface:
 
 
         print("Finished initialising audio")
-
-        # Loopback stuff
-        self.loopback_channels_left = [i for i in range(0, self.n_channels//2)]
-        self.loopback_channels_right = [i for i in range(self.n_channels//2, self.n_channels)]
 
 
     def start_stream(self):
@@ -69,45 +78,27 @@ class AudioInterface:
         return True
 
 
-    def loopback_audio(self):
-        """
-        Reads input from the loopback device, and then prepares it for output
-        """
-        loopback_buffer = self.in_stream.read()
-
-        loopback_input = np.frombuffer(
-            loopback_buffer, dtype=np.int16).reshape(-1, 2)
-
-
-        # print("ch 0 max: {}, ch 1 max: {}".format(
-        #     np.abs(loopback_input[:,0]).max(), np.abs(loopback_input[:,0]).max()))
-
-        # Now map onto the correct output channels
-        loopback_output = np.zeros(
-            (loopback_input.shape[0], self.n_channels), dtype=np.int16)
-        loopback_output[:,self.loopback_channels_left] = loopback_input[:,[0]]
-        loopback_output[:,self.loopback_channels_right] = loopback_input[:,[1]]
-
-        print("channels max: {}".format(np.abs(loopback_output).max(axis=0)))
-
-        return loopback_output
-
-
     def process_audio_chunk(self):
         st = time.time()
 
         # Send recording data
-        if self.recording_queue is not None:
-            pass
-            # in_data = self.in_stream.read()
-            # if in_data[0]:
-            #      self.recording_queue.put(in_data)
+        # if self.recording_queue is not None:
+        #     in_data = self.in_stream.read()
+        #     if in_data[0]:
+        #         in_data = np.frombuffer(
+        #             in_data, dtype=np.int16).reshape(-1, 2)
+        #         self.recording_queue.put(in_data)
 
-        loopback_samples = self.loopback_audio()
+        # Loopback data
+        if self.loopback_queue is not None:
+            in_data = self.loopback_stream.read()
+            if in_data[0]:
+                in_data = np.frombuffer(
+                    in_data, dtype=np.int16).reshape(-1, 2)
+                self.loopback_queue.put(in_data)
+
         # Get output audio
         samples = self.playback_queue.get()
-
-        samples += loopback_samples
 
         te = time.time() - st
         # print("Time elapsed: {}".format(te))
