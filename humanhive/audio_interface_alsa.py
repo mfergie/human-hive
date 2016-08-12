@@ -79,6 +79,7 @@ class AudioInterface:
 
 
     def process_audio_chunk(self):
+        print("AI.PAC()")
         st = time.time()
 
         # Send recording data
@@ -93,19 +94,27 @@ class AudioInterface:
         if self.loopback_queue is not None:
             in_data = self.loopback_stream.read()
             if in_data[0]:
+                print("rec frame_count: {}".format(in_data[0])
                 in_data = np.frombuffer(
-                    in_data, dtype=np.int16).reshape(-1, 2)
+                    in_data[1], dtype=np.int16).reshape(-1, 2)
                 self.loopback_queue.put(in_data)
 
+        print("Put loopback")
+
         # Get output audio
-        samples = self.playback_queue.get()
+        try: 
+            samples = self.playback_queue.get(block=False)
+       
+            print("got saples")
+            te = time.time() - st
+            # print("Time elapsed: {}".format(te))
 
-        te = time.time() - st
-        # print("Time elapsed: {}".format(te))
-
-        st = time.time()
-        self.out_stream.write(samples)
-        # print("Write time: {}".format(time.time() - st))
+            st = time.time()
+            self.out_stream.write(samples)
+            # print("Write time: {}".format(time.time() - st))
+            print("write audio")
+        except Exception as e:
+            pass
 
 
     def run(self):

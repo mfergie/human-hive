@@ -75,6 +75,7 @@ class AudioInterface:
 
 
     def process_audio_chunk(self):
+        print("PAC AI")
         # Send recording data
         if self.recording_queue is not None:
             # in_data = self.stream.read(self.frame_count, exception_on_overflow=False)
@@ -95,4 +96,5 @@ class AudioInterface:
 
     def run(self):
         while True:
+            print("AI.run()")
             self.process_audio_chunk()

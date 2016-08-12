@@ -175,4 +175,5 @@ class HumanHive:
         """
         Enter main HumanHive loop.
         """
+        print("HH.run()")
         self.playback_producer.run()
