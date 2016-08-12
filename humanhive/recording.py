@@ -36,16 +36,15 @@ class Recording:
         recording queue and processes it.
         """
         while True:
-            frame_count, in_data = self.recording_queue.get()
-            self.process_audio(in_data, frame_count)
 
-    def process_audio(self, in_data, frame_count):
+            self.process_audio()
+
+    def process_audio(self):
         """
         Processes incoming audio data. Segments when a voice is detected and
         records sample. This is then saved to the sample_bank.
         """
-
-        in_data = np.frombuffer(in_data, dtype=np.int16).reshape(-1, 2)
+        in_data = self.recording_queue.get()
         assert in_data.shape[0] == frame_count
 
         print("ch 0 max: {}, ch 1 max: {}".format(

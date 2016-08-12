@@ -75,7 +75,6 @@ class AudioInterface:
 
 
     def process_audio_chunk(self):
-        print("process_audio_chunk")
         # Send recording data
         if self.recording_queue is not None:
             # in_data = self.stream.read(self.frame_count, exception_on_overflow=False)
@@ -85,7 +84,7 @@ class AudioInterface:
         if self.loopback_queue is not None:
             in_data = np.frombuffer(
                 self.stream.read(self.frame_count, exception_on_overflow=False),
-                dtype=np.uint16)
+                dtype=np.uint16).reshape(-1, 2)
             self.loopback_queue.put(in_data, block=False)
 
         # Get output audio
