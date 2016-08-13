@@ -19,7 +19,7 @@ if "linux" in sys.platform:
     # If using linux, use the ALSA module directly
     from .audio_interface_alsa import AudioInterface
 else:
-    from .audio_interface import AudioInterface
+    from .audio_interface_sd import AudioInterface
 
 def playback_consumer(playback_queue,
                       recording_queue,
