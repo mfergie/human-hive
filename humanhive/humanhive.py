@@ -29,7 +29,8 @@ def playback_consumer(playback_queue,
                       sample_width,
                       n_frames_per_chunk,
                       output_device_id,
-                      input_device_id=None):
+                      input_device_id=None,
+                      mpctx=None):
     """
     Creates a PlaybackQueueConsumer and audio interface and configured to
     retrieve and send samples to the playback and recording queues respectively.
@@ -48,7 +49,8 @@ def playback_consumer(playback_queue,
         sample_width,
         output_device_id,
         input_device_id,
-        n_frames_per_chunk)
+        n_frames_per_chunk,
+        mpctx=mpctx)
 
     print("playback_consumer: Starting audio stream in {}".format(proc_name))
     audio_interface.start_stream()
@@ -136,7 +138,8 @@ class HumanHive:
                 self.sample_width,
                 self.n_frames_per_chunk,
                 output_device_id,
-                input_device_id))
+                input_device_id,
+                ctx))
 
         self.recording_process = ctx.Process(
             target=recording_consumer,

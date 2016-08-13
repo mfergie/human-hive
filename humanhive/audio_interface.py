@@ -18,7 +18,8 @@ class AudioInterface:
                  sample_width,
                  output_device_id,
                  input_device_id,
-                 frame_count=1024):
+                 frame_count=1024,
+                 mpctx=None):
         self.playback = playback
         self.recording_queue = recording_queue
         self.loopback_queue = loopback_queue
