@@ -10,7 +10,7 @@ class AudioInterface:
     """
 
     def __init__(self,
-                 playback,
+                 playback_queue,
                  recording_queue,
                  loopback_queue,
                  n_channels,
@@ -20,7 +20,7 @@ class AudioInterface:
                  input_device_id,
                  frame_count=1024,
                  mpctx=None):
-        self.playback = playback
+        self.playback_queue = playback_queue
         self.recording_queue = recording_queue
         self.loopback_queue = loopback_queue
         self.n_channels = n_channels
@@ -38,6 +38,7 @@ class AudioInterface:
         self.loopback_channels_right = [
             i for i in range(self.n_channels//2, self.n_channels)]
 
+        self.channel_volumes = None
 
 
         output_device_id = int(output_device_id)
@@ -50,6 +51,8 @@ class AudioInterface:
             channels=(2, self.n_channels),
             dtype=np.int16,
             callback=self.callback)
+
+        self.loopback_volume_threshold = 20
 
     def start_stream(self):
         self.stream.start()
@@ -68,8 +71,15 @@ class AudioInterface:
         """
         Audio processing callback.
         """
-        outdata[:] = loopback.loopback_channels(
-            indata, self.loopback_channels_left, self.loopback_channels_right)
+
+        indata_volume = np.abs(indata).mean()
+        if indata_volume > self.loopback_volume_threshold:
+            outdata[:] = loopback.loopback_channels(
+                indata, self.loopback_channels_left, self.loopback_channels_right)
+        else:
+            outdata[:] = self.playback_queue.get(block=True)
+
+        self.channel_volumes = np.abs(outdata).mean(axis=0)
         return None
 
 
@@ -78,4 +88,5 @@ class AudioInterface:
 
         while self.is_active():
             print(self.stream.cpu_load)
+            print("Channel volumes: {}".format(self.channel_volumes))
             time.sleep(0.1)

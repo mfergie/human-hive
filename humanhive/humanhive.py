@@ -17,7 +17,7 @@ from .loopback import Loopback
 
 if "linux" in sys.platform:
     # If using linux, use the ALSA module directly
-    from .audio_interface_alsa import AudioInterface
+    from .audio_interface_sd import AudioInterface
 else:
     from .audio_interface_sd import AudioInterface
 
@@ -130,7 +130,7 @@ class HumanHive:
         self.audio_interface_process = ctx.Process(
             target=playback_consumer,
             args=(
-                self.mixer_out_queue,
+                self.playback_queue,
                 self.recording_queue,
                 self.loopback_queue,
                 self.n_channels,
@@ -147,19 +147,6 @@ class HumanHive:
                 self.recording_queue,
                 self.sample_rate))
 
-        self.loopback_process = ctx.Process(
-            target=loopback_process,
-            args=(
-                self.loopback_queue,
-                self.loopback_mixer_queue,
-                2,
-                self.n_channels))
-
-        self.mixer_process = ctx.Process(
-            target=mixer_process,
-            args=(
-                [self.loopback_mixer_queue, self.playback_queue],
-                self.mixer_out_queue))
 
         print("Launching processes")
         self.audio_interface_process.daemmon = True
@@ -167,12 +154,6 @@ class HumanHive:
 
         self.recording_process.daemmon = True
         self.recording_process.start()
-
-        self.loopback_process.daemmon = True
-        self.loopback_process.start()
-
-        self.mixer_process.daemmon = True
-        self.mixer_process.start()
 
     def run(self):
         """
