@@ -1,6 +1,7 @@
 import time
 import alsaaudio
 import numpy as np
+from threading import Thread
 
 
 class AudioInterfaceSingleDevice:
@@ -99,7 +100,7 @@ class AudioInterface:
         print("available cards: {}".format(alsaaudio.cards()))
         print("available PCMs: {}".format(alsaaudio.pcms()))
 
-        self.playback_process = mpctx.Process(
+        self.playback_process = Thread(
             target=audio_interface_process,
             args=(
                 playback_queue,
@@ -110,7 +111,7 @@ class AudioInterface:
                 output_device_id,
                 frame_count))
 
-        self.loopback_process = mpctx.Process(
+        self.loopback_process = Thread(
             target=audio_interface_process,
             args=(
                 loopback_queue,
