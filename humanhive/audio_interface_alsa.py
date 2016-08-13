@@ -39,14 +39,17 @@ class AudioInterfaceSingleDevice:
         if self.stream.pcmtype() == alsaaudio.PCM_CAPTURE:
             # Input stream
             in_data = self.stream.read()
-            if in_data[0]:
+            if in_data[0] == self.frame_count:
                 audio_data = np.frombuffer(
                     in_data[1], dtype=np.int16).reshape(-1, 2)
                 self.audio_queue.put(audio_data)
+            else: 
+                print("Skipping {} frames".format(in_data[0]))
 
         else:
             # Output stream
             samples = self.audio_queue.get()
+            print("playback audio_queue size: {}".format(self.audio_queue.qsize()))
             self.stream.write(samples)
 
 
@@ -115,7 +118,7 @@ class AudioInterface:
             target=audio_interface_process,
             args=(
                 loopback_queue,
-                alsaaudio.PCM_PLAYBACK,
+                alsaaudio.PCM_CAPTURE,
                 2,
                 sample_rate,
                 sample_width,

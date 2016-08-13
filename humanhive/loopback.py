@@ -37,9 +37,7 @@ class Loopback:
 
         print("loopback channels max: {}".format(np.abs(loopback_output).max(axis=0)))
 
-        print("Loopback putting audio")
         self.audio_out.put(loopback_output)
-        print("Loopback putted audio")
 
 
     def run(self):

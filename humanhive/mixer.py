@@ -4,6 +4,7 @@ sources and outputting them to a single destination.
 
 Assumes that the content in queues behaves like numpy arrays.
 """
+import time
 
 class Mixer:
 
@@ -17,6 +18,7 @@ class Mixer:
 
     def process_audio(self):
 
+        st = time.time()
         all_samples = []
         for ind, queue in enumerate(self.input_queues):
             try:
@@ -25,6 +27,8 @@ class Mixer:
                  print("Queue {} empty: {}".format(ind, e))
 
         samples = sum(all_samples)
+        print("Mixer get audio time: {}".format(time.time() - st))
+        print("mixer qsize: {}".format(self.output_queue.qsize()))
 
         self.output_queue.put(samples)
 
