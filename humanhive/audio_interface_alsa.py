@@ -133,6 +133,11 @@ class AudioInterface:
         self.playback_process.daemmon = True
         self.playback_process.start()
 
+
+    def start_stream(self):
+        pass
+
+
     def run(self):
         while True:
             # Doesn't need to do anything. So just sleep
