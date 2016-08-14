@@ -52,7 +52,7 @@ class AudioInterface:
             dtype=np.int16,
             callback=self.callback)
 
-        self.loopback_volume_threshold = 20
+        self.loopback_volume_threshold = 40
 
     def start_stream(self):
         self.stream.start()

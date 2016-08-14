@@ -52,6 +52,10 @@ def playback_consumer(playback_queue,
         n_frames_per_chunk,
         mpctx=mpctx)
 
+    # Sleep to allow everything else to fill-up buffers before starting consumer
+    time.sleep(1)
+    print("Playback queue size at start: {}".format(playback_queue.qsize()))
+
     print("playback_consumer: Starting audio stream in {}".format(proc_name))
     audio_interface.start_stream()
     print("playback_consumer: Calling Audio Interface.run()")
