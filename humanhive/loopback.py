@@ -6,15 +6,18 @@ import numpy as np
 
 def loopback_channels(loopback_input,
                       loopback_channels_left,
-                      loopback_channels_right):
+                      loopback_channels_right,
+                      loopback_output=None):
     """
     Maps the 2 input channels in loopback_input into output channels.
+    If loopback_output is passed, it copies the data directly into that array.
     """
-    n_channels_out = len(loopback_channels_left) + len(loopback_channels_right)
 
     # Now map onto the correct output channels
-    loopback_output = np.zeros(
-        (loopback_input.shape[0], n_channels_out), dtype=np.int16)
+    if loopback_output is None:
+        n_channels_out = len(loopback_channels_left) + len(loopback_channels_right)
+        loopback_output = np.zeros(
+            (loopback_input.shape[0], n_channels_out), dtype=np.int16)
     loopback_output[:,loopback_channels_left] = loopback_input[:,[0]]
     loopback_output[:,loopback_channels_right] = loopback_input[:,[1]]
 

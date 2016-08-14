@@ -72,37 +72,22 @@ class AudioInterface:
         Audio processing callback.
         """
 
-        indata_volume = np.abs(indata).mean()
-        if indata_volume > self.loopback_volume_threshold:
-            outdata[:] = loopback.loopback_channels(
-                indata, self.loopback_channels_left, self.loopback_channels_right)
-        else:
-            outdata[:] = self.playback_queue.get(block=True)
+        #indata_volume = np.abs(indata).mean()
+        #if True or indata_volume > self.loopback_volume_threshold:
+        loopback.loopback_channels(
+                indata, 
+                self.loopback_channels_left, self.loopback_channels_right, outdata)
+        #else:
+        #    outdata[:] = self.playback_queue.get(block=True)
 
-        self.channel_volumes = np.abs(outdata).mean(axis=0)
+        #self.channel_volumes = np.abs(outdata).mean(axis=0)
         return None
 
 
     def run(self):
         self.start_stream()
 
-        last_cpu_load = self.stream.cpu_load
-        n_identical_cpu_loads = 0
-        restarted=False
-
         while self.is_active():
-            cpu_load = self.stream.cpu_load
-            if cpu_load == last_cpu_load:
-                n_identical_cpu_loads += 1
-            else:
-                n_identical_cpu_loads = 0
-            if n_identical_cpu_loads > 4 and not restarted:
-                restarted=True
-                print("Restarting stream")
-                self.stream.stop()
-                self.stream.start()
-                n_identical_cpu_loads = 0
-            last_cpu_load = cpu_load
-            print(cpu_load)
+            print(self.stream.cpu_load)
             #print("Channel volumes: {}".format(self.channel_volumes))
-            time.sleep(0.1)
+            time.sleep(0.5)
