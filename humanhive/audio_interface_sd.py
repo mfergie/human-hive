@@ -86,7 +86,23 @@ class AudioInterface:
     def run(self):
         self.start_stream()
 
+        last_cpu_load = self.stream.cpu_load
+        n_identical_cpu_loads = 0
+        restarted=False
+
         while self.is_active():
-            print(self.stream.cpu_load)
-            print("Channel volumes: {}".format(self.channel_volumes))
+            cpu_load = self.stream.cpu_load
+            if cpu_load == last_cpu_load:
+                n_identical_cpu_loads += 1
+            else:
+                n_identical_cpu_loads = 0
+            if n_identical_cpu_loads > 4 and not restarted:
+                restarted=True
+                print("Restarting stream")
+                self.stream.stop()
+                self.stream.start()
+                n_identical_cpu_loads = 0
+            last_cpu_load = cpu_load
+            print(cpu_load)
+            #print("Channel volumes: {}".format(self.channel_volumes))
             time.sleep(0.1)
