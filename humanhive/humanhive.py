@@ -105,7 +105,7 @@ class HumanHive:
             target=playback_consumer,
             args=(
                 self.playback_queue,
-                self.recording_queue,
+                None, #self.recording_queue,
                 self.n_channels,
                 self.sample_rate,
                 self.sample_width,
