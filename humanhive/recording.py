@@ -62,7 +62,7 @@ class Recording:
             print("Closing file")
         self.chunks_count += 1
 
-        # print("channel max: {}".format(np.abs(in_data).max()))
+        print("channel max: {}".format(np.abs(in_data).max()))
 
 
         #
