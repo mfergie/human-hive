@@ -1,79 +1,6 @@
 import time
 import alsaaudio
 import numpy as np
-from threading import Thread
-
-
-class AudioInterfaceSingleDevice:
-    """
-    Processes audio from a single device.
-    """
-
-    def __init__(self,
-                 audio_queue,
-                 pcm_type,
-                 n_channels,
-                 sample_rate,
-                 sample_width,
-                 device_id,
-                 frame_count):
-
-        self.audio_queue = audio_queue
-        self.n_channels = n_channels
-        self.sample_rate = sample_rate
-        self.frame_count = frame_count
-
-        self.stream = alsaaudio.PCM(
-            type=pcm_type,
-            #mode=alsaaudio.PCM_NONBLOCK,
-            device=device_id)
-        self.stream.setchannels(2)
-        self.stream.setrate(self.sample_rate)
-        self.stream.setformat(alsaaudio.PCM_FORMAT_S16_LE)
-        self.stream.setperiodsize(self.frame_count)
-        print("stream card: {}".format(self.stream.cardname()))
-
-
-    def process_audio_chunk(self):
-
-        if self.stream.pcmtype() == alsaaudio.PCM_CAPTURE:
-            # Input stream
-            in_data = self.stream.read()
-            if in_data[0] == self.frame_count:
-                audio_data = np.frombuffer(
-                    in_data[1], dtype=np.int16).reshape(-1, 2)
-                self.audio_queue.put(audio_data)
-            else: 
-                print("Skipping {} frames".format(in_data[0]))
-
-        else:
-            # Output stream
-            samples = self.audio_queue.get()
-            print("playback audio_queue size: {}".format(self.audio_queue.qsize()))
-            self.stream.write(samples)
-
-
-    def run(self):
-        while True:
-            self.process_audio_chunk()
-
-
-def audio_interface_process(audio_queue,
-                            pcm_type,
-                            n_channels,
-                            sample_rate,
-                            sample_width,
-                            device_id,
-                            frame_count):
-    audio_interface = AudioInterfaceSingleDevice(
-        audio_queue,
-        pcm_type,
-        n_channels,
-        sample_rate,
-        sample_width,
-        device_id,
-        frame_count)
-    audio_interface.run()
 
 
 class AudioInterface:
@@ -85,14 +12,14 @@ class AudioInterface:
     def __init__(self,
                  playback_queue,
                  recording_queue,
-                 loopback_queue,
                  n_channels,
                  sample_rate,
                  sample_width,
                  output_device_id,
                  input_device_id,
-                 frame_count=1024,
-                 mpctx=None):
+                 frame_count=1024):
+        self.playback_queue = playback_queue
+        self.recording_queue = recording_queue
         self.n_channels = n_channels
         self.sample_rate = sample_rate
         self.sample_width = sample_width
@@ -103,46 +30,57 @@ class AudioInterface:
         print("available cards: {}".format(alsaaudio.cards()))
         print("available PCMs: {}".format(alsaaudio.pcms()))
 
-        self.playback_process = Thread(
-            target=audio_interface_process,
-            args=(
-                playback_queue,
-                alsaaudio.PCM_PLAYBACK,
-                n_channels,
-                sample_rate,
-                sample_width,
-                output_device_id,
-                frame_count))
+        self.in_stream = alsaaudio.PCM(
+            type=alsaaudio.PCM_CAPTURE,
+#            mode=alsaaudio.PCM_NONBLOCK,
+            device=input_device_id)
+        self.in_stream.setchannels(2)
+        self.in_stream.setrate(self.sample_rate)
+        self.in_stream.setformat(alsaaudio.PCM_FORMAT_S16_LE)
+        self.in_stream.setperiodsize(self.frame_count)
+        print("in_stream card: {}".format(self.in_stream.cardname()))
 
-        self.loopback_process = Thread(
-            target=audio_interface_process,
-            args=(
-                loopback_queue,
-                alsaaudio.PCM_CAPTURE,
-                2,
-                sample_rate,
-                sample_width,
-                input_device_id,
-                frame_count))
+        self.out_stream = alsaaudio.PCM(
+            type=alsaaudio.PCM_PLAYBACK,
+            device=output_device_id)
+        self.out_stream.setchannels(self.n_channels)
+        self.out_stream.setrate(self.sample_rate)
+        self.out_stream.setformat(alsaaudio.PCM_FORMAT_S16_LE)
+        self.out_stream.setperiodsize(self.frame_count)
+        print("out_stream card: {}".format(self.out_stream.cardname()))
 
 
-        print("Starting recording processes")
-        # Start input processes first, and let the buffers pre-fill
-        self.loopback_process.daemon = True
-        self.loopback_process.start()
-        time.sleep(0.1)
-
-
-        print("Starting playback process")
-        self.playback_process.daemmon = True
-        self.playback_process.start()
+        print("Finished initialising audio")
 
 
     def start_stream(self):
         pass
 
 
+    def close_stream(self):
+        pass
+
+
+    def is_active(self):
+        return True
+
     def run(self):
         while True:
-            # Doesn't need to do anything. So just sleep
-            time.sleep(1)
+            st = time.time()
+
+            # Send recording data
+            if self.recording_queue is not None:
+                in_data = self.in_stream.read()
+                if in_data[0]:
+                     recdata = np.frombuffer(in_data[1], dtype=np.int16).reshape(-1, 2)
+                     self.recording_queue.put(recdata, block=False)
+
+            # Get output audio
+            samples = self.playback_queue.get()
+
+            te = time.time() - st
+            # print("Time elapsed: {}".format(te))
+
+            st = time.time()
+            self.out_stream.write(samples)
+            #print("Write time: {}".format(time.time() - st))

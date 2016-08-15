@@ -21,14 +21,15 @@ class Mixer:
         st = time.time()
         all_samples = []
         for ind, queue in enumerate(self.input_queues):
+            print("Read queue: {}".format(ind), end="... ")
             try:
                  all_samples.append(queue.get(block=True))
             except Exception as e:
                  print("Queue {} empty: {}".format(ind, e))
-
+            print("finished.")
         samples = sum(all_samples)
         print("Mixer get audio time: {}".format(time.time() - st))
-        print("mixer qsize: {}".format(self.output_queue.qsize()))
+        # print("mixer qsize: {}".format(self.output_queue.qsize()))
 
         self.output_queue.put(samples)
 

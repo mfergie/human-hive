@@ -12,7 +12,6 @@ class AudioInterface:
     def __init__(self,
                  playback,
                  recording_queue,
-                 loopback_queue,
                  n_channels,
                  sample_rate,
                  sample_width,
@@ -22,7 +21,6 @@ class AudioInterface:
                  mpctx=None):
         self.playback = playback
         self.recording_queue = recording_queue
-        self.loopback_queue = loopback_queue
         self.n_channels = n_channels
         self.sample_rate = sample_rate
         self.sample_width = sample_width
@@ -55,10 +53,10 @@ class AudioInterface:
 
         print("Finished initialising audio")
 
-        # Loopback stuff
-        self.loopback_stream = self.stream
-        self.input_stream = self.stream
 
+        # Prefill recording buffer to support loopback
+        self.n_chunks_prefill = 10
+        self.chunks_processed = 0
 
     def start_stream(self):
         self.stream.start_stream()
@@ -79,21 +77,22 @@ class AudioInterface:
         print("PAC AI")
         # Send recording data
         if self.recording_queue is not None:
-            # in_data = self.stream.read(self.frame_count, exception_on_overflow=False)
-            # self.recording_queue.put((self.frame_count, in_data), block=False)
-            pass
-
-        if self.loopback_queue is not None:
             in_data = np.frombuffer(
                 self.stream.read(self.frame_count, exception_on_overflow=False),
                 dtype=np.uint16).reshape(-1, 2)
-            self.loopback_queue.put(in_data, block=False)
+            print("in_data.shape: {}".format(in_data.shape))
+            self.recording_queue.put(in_data, block=False)
 
-        # Get output audio
-        samples = self.playback.get()
+
+        if self.chunks_processed > self.n_chunks_prefill:
+            # Get output audio
+            samples = self.playback.get()
+        else:
+            samples = np.zeros((self.frame_count, self.n_channels), dtype=np.int16)
 
         self.stream.write(samples, self.frame_count, exception_on_underflow=False)
 
+        self.chunks_processed += 1
 
     def run(self):
         while True:
