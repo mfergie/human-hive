@@ -1,5 +1,6 @@
 import time
 import alsaaudio
+import numpy as np
 
 
 class AudioInterface:
@@ -31,7 +32,7 @@ class AudioInterface:
 
         self.in_stream = alsaaudio.PCM(
             type=alsaaudio.PCM_CAPTURE,
-            mode=alsaaudio.PCM_NONBLOCK,
+#            mode=alsaaudio.PCM_NONBLOCK,
             device=input_device_id)
         self.in_stream.setchannels(2)
         self.in_stream.setrate(self.sample_rate)
@@ -72,7 +73,8 @@ class AudioInterface:
                 pass
                 in_data = self.in_stream.read()
                 if in_data[0]:
-                     self.recording_queue.put(in_data)
+                     recdata = np.frombuffer(in_data[1], dtype=np.int16).reshape(-1, 2)
+                     self.recording_queue.put(recdata, block=False)
 
             # Get output audio
             samples = self.playback_queue.get()
@@ -82,4 +84,4 @@ class AudioInterface:
 
             st = time.time()
             self.out_stream.write(samples)
-            # print("Write time: {}".format(time.time() - st))
+            #print("Write time: {}".format(time.time() - st))
