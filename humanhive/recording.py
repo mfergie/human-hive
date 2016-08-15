@@ -1,4 +1,6 @@
 import numpy as np
+import wave
+
 
 class Recording:
     """
@@ -30,24 +32,39 @@ class Recording:
         # Stores changing volumes over time for analysis
         self.volume_buffer = []
 
+
+        self.wf = wave.open("/tmp/test.wav", "wb")
+        self.wf.setnchannels(2)
+        self.wf.setsampwidth(2)
+        self.wf.setframerate(48000)
+        self.chunks_count = 0
+
+
     def run(self):
         """
         Puts the recording module into a running mode. Consumes data from
         recording queue and processes it.
         """
         while True:
-            frame_count, in_data = self.recording_queue.get()
-            self.process_audio(in_data, frame_count)
+            in_data = self.recording_queue.get()
+            self.process_audio(in_data)
 
-    def process_audio(self, in_data, frame_count):
+    def process_audio(self, in_data):
         """
         Processes incoming audio data. Segments when a voice is detected and
         records sample. This is then saved to the sample_bank.
         """
 
-        in_data = np.frombuffer(in_data, dtype=np.int16)
+        if self.chunks_count < 1000:
+            self.wf.writeframes(in_data)
+        elif self.chunks_count == 1000:
+            self.wf.close()
+            print("Closing file")
+        self.chunks_count += 1
 
-        print("frame min: {}, frame_max: {}".format(in_data.min(), in_data.max()))
+        # print("channel max: {}".format(np.abs(in_data).max()))
+
+
         #
         # if self.current_sample is None:
         #     self.update_ambient_volume(in_data)

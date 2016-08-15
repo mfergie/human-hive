@@ -1,4 +1,5 @@
 import pyaudio
+import numpy as np
 import time
 
 
@@ -65,12 +66,18 @@ class AudioInterface:
     def is_active(self):
         return self.stream.is_active()
 
+
+    # def audio_callback(in_data, frame_count, time_info, status):
+    #     pass
+
+
     def run(self):
         while True:
             # Send recording data
             if self.recording_queue is not None:
                 in_data = self.stream.read(self.frame_count, exception_on_overflow=False)
-                self.recording_queue.put((self.frame_count, in_data), block=False)
+                in_data = np.frombuffer(in_data, dtype=np.int16).reshape(-1, 2)
+                self.recording_queue.put(in_data, block=False)
 
             # Get output audio
             samples = self.playback.get()
