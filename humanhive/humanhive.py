@@ -48,7 +48,7 @@ def playback_consumer(playback_queue,
         output_device_id,
         input_device_id,
         n_frames_per_chunk,
-        mpctx=mpctx)
+        )
 
     # Sleep to allow everything else to fill-up buffers before starting consumer
     time.sleep(.1)
