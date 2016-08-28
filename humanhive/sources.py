@@ -95,12 +95,12 @@ class OccasionalSource:
         # Prepare a buffer of zeros to return.
         out_data = np.zeros((n_frames, self.n_channels), dtype=np.int16)
 
-        # print("current_frame: {}, frames_till_next_play: {}".format(
-        #     self.current_frame, self.frames_till_next_play  ))
+        print("current_frame: {}, frames_till_next_play: {}".format(
+            self.current_frame, self.frames_till_next_play  ))
 
         if self.current_frame is None:
             self.frames_till_next_play -= n_frames
-            if self.frames_till_next_play == 0:
+            if self.frames_till_next_play <= 0:
                 # It's time to play the sample
                 self.current_frame = 0
                 self.channel_to_play = np.random.randint(self.n_channels)
@@ -117,5 +117,8 @@ class OccasionalSource:
                 # We've finished the sample, reset
                 self.current_frame = None
                 self.frames_till_next_play = self.n_frames_between_play
+
+        out_data_fp = np.asarray(out_data, dtype=np.float32) * self.volume
+        out_data = np.asarray(out_data_fp, dtype=np.int16)
 
         return out_data

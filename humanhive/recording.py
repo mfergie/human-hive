@@ -54,17 +54,18 @@ class Recording:
         Processes incoming audio data. Segments when a voice is detected and
         records sample. This is then saved to the sample_bank.
         """
-        print("in_data shape: {}".format(in_data.shape))
-        print("chunks count: {}".format(self.chunks_count))
-
-        if self.chunks_count < 1000:
-            self.wf.writeframes(in_data)
-        elif self.chunks_count == 1000:
-            self.wf.close()
-            print("Closing file")
-        self.chunks_count += 1
-
-        print("channel max: {}".format(np.abs(in_data).max()))
+        pass
+        # print("in_data shape: {}".format(in_data.shape))
+        # print("chunks count: {}".format(self.chunks_count))
+        #
+        # if self.chunks_count < 1000:
+        #     self.wf.writeframes(in_data)
+        # elif self.chunks_count == 1000:
+        #     self.wf.close()
+        #     print("Closing file")
+        # self.chunks_count += 1
+        #
+        # print("channel max: {}".format(np.abs(in_data).max()))
 
 
         #

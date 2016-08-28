@@ -41,6 +41,11 @@ def build_parser():
         # type=int
     )
 
+    parser.add_argument(
+        "--occasional-sample",
+        required=False,
+        help=("An audio file to a play occasionally through a random hive")
+    )
 
     parser.add_argument(
         "--recorded-samples-dir",
@@ -74,6 +79,18 @@ if __name__ == "__main__":
             audio_data,
             n_channels=args.n_channels,
             sample_rate=sample_rate))
+
+    if args.occasional_sample:
+        occ_audio_data = samplestream.load_wave_file(
+            args.occasional_sample, mono=True)
+        # Add a source
+        humanhive.source_bank.add_source(
+            sources.OccasionalSource(
+                occ_audio_data,
+                n_channels=args.n_channels,
+                sample_rate=sample_rate,
+                repeat_period=10*60,
+                volume=1.0))
 
 
     print("Entering HumanHive main loop")
