@@ -68,27 +68,33 @@ class OccasionalSource:
     This source will play a sample through a random hive at fixed time.
     Intervals.
 
+    audio_data is a list of audio samples through which to play back on rotation
+
     repeat_period is the time in seconds to wait between plays
     """
 
     def __init__(self,
-                 audio_data,
+                 audio_data_files,
                  n_channels,
                  sample_rate,
-                 repeat_period=15*60, #default 15 mins
+                 repeat_period=10*60, #default 10 mins
                  volume=1.0):
 
-        self.audio_data = audio_data
-        self.n_audio_frames = len(self.audio_data)
+        self.audio_data_files = audio_data_files
+        self.n_audio_files = len(self.audio_data_files)
         self.n_channels=n_channels
 
         self.volume = volume
         self.sample_rate = sample_rate
 
-        self.current_frame = None
-        self.n_frames_between_play = repeat_period * sample_rate
-        self.frames_till_next_play = self.n_frames_between_play
+        self.current_frame = 0
+        self.n_frames_between_play = sample_rate * repeat_period
+        self.frames_till_next_play = 0
         self.channel_to_play = 0
+        self.sample_to_play = 0
+
+    def _current_sample_n_frames(self):
+        return len(self.audio_data_files[self.sample_to_play])
 
     def get_frames(self, n_frames):
 
@@ -105,10 +111,10 @@ class OccasionalSource:
                 self.current_frame = 0
                 self.channel_to_play = np.random.randint(self.n_channels)
 
-        elif self.current_frame <= self.n_audio_frames:
-            n_frames_to_take = min(n_frames, self.n_audio_frames - self.current_frame)
+        elif self.current_frame <= self._current_sample_n_frames():
+            n_frames_to_take = min(n_frames, self._current_sample_n_frames() - self.current_frame)
             out_data[:n_frames_to_take, self.channel_to_play] = (
-                self.audio_data[
+                self.audio_data_files[self.sample_to_play][
                     self.current_frame:self.current_frame + n_frames_to_take])
             # Advance through sample
             self.current_frame += n_frames
@@ -117,6 +123,7 @@ class OccasionalSource:
                 # We've finished the sample, reset
                 self.current_frame = None
                 self.frames_till_next_play = self.n_frames_between_play
+                self.sample_to_play = (self.sample_to_play + 1) % self.n_audio_files
 
         out_data_fp = np.asarray(out_data, dtype=np.float32) * self.volume
         out_data = np.asarray(out_data_fp, dtype=np.int16)

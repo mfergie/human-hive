@@ -44,6 +44,7 @@ def build_parser():
     parser.add_argument(
         "--occasional-sample",
         required=False,
+        nargs="+",
         help=("An audio file to a play occasionally through a random hive")
     )
 
@@ -81,8 +82,10 @@ if __name__ == "__main__":
             sample_rate=sample_rate))
 
     if args.occasional_sample:
-        occ_audio_data = samplestream.load_wave_file(
-            args.occasional_sample, mono=True)
+        print("args.occasional_sample: {}".format(args.occasional_sample))
+        occ_audio_data = [samplestream.load_wave_file(
+            fn, mono=True)
+            for fn in args.occasional_sample]
         # Add a source
         humanhive.source_bank.add_source(
             sources.OccasionalSource(
